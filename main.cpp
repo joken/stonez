@@ -1,27 +1,48 @@
-
-// Type Definitions
-using RawStone = std::array<std::array<char, 8>, 8>;
-using RawField = std::array<std::array<char, 32, 32>;
-
-class Field {
-  RawField raw;
-};
-
-class Stone {
-  RawStone raw;
-};
-
+/*
+ * MEMO
+ *  - 障害物はスコアに入らないので、スコアと障害物の両方を1として表すことはできない
+ */
 
 // -- Constant Values
-enum STONE_MANIPURATION { // 石操作情報
+enum STONE_MANIPULATION { // 石操作情報
   REVERSED = 1,     // これが立ってたら反転してる
   ROTATED_90 = 2,   // これが立ってたら90度回転
   ROTATED_180 = 4,  // これがry
   ROTATED_270 = 6,
 };
 
-// -- Global Variables
+// Type Declarations
+using RawStone = std::array<std::array<char, 8>, 8>;
+using RawField = std::array<std::array<char, 32, 32>;
+
+class Stone;
+class Field;
+
+// Variable Declarations
 Field max_score_field; // 最適な解があるField
+Stone stones[256]; // 渡されるstoneを格納
+uint8_t number_of_stones; // 渡されるstoneの数
+
+// Type Definitions
+class Stone {
+public:
+  RawStone raw;
+};
+
+class Field {
+private:
+  const Stone* put_stones[256];
+  STONE_MANIPULATION[256] manipurations;
+public:
+  RawField raw;
+public:
+  void put_stone(const uint8_t n, STONE_MANIPURATION m) {
+    put_stones[n] = &stones[n];
+  }
+  const uint16_t score() const;
+};
+
+
 
 // -- Function Declarations
 void solve(Field f, uint8_t look_nth_stone);
