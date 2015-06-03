@@ -1,4 +1,5 @@
 
+// Type Definitions
 using RawStone = std::array<std::array<char, 8>, 8>;
 using RawField = std::array<std::array<char, 32, 32>;
 
@@ -10,10 +11,8 @@ class Stone {
   RawStone raw;
 };
 
-class StoneManipurator {
-};
 
-
+// -- Constant Values
 enum STONE_MANIPURATION { // 石操作情報
   REVERSED = 1,     // これが立ってたら反転してる
   ROTATED_90 = 2,   // これが立ってたら90度回転
@@ -21,9 +20,28 @@ enum STONE_MANIPURATION { // 石操作情報
   ROTATED_270 = 6,
 };
 
+// -- Global Variables
 Field max_score_field; // 最適な解があるField
 
-/*
+// -- Function Declarations
+void solve(Field f, uint8_t look_nth_stone);
+
+void parse(Field*);
+void parse_field(Field* f);
+void parse_stone();
+
+int main() {
+  Field f;
+  get_problem_file();
+  parse(&f);
+  solve(field, 0);
+  submit();
+  return 0;
+}
+
+// -- Function Definitions
+
+/**
  * solve
  *
  * 問題を解くぞい
@@ -60,3 +78,56 @@ void solve(Field f, uint8_t look_nth_stone) {
   }
 }
 
+/*
+ * parse_field
+ *
+ * 入力からField部分をパースする
+ * -- Args
+ *  Field* f: パースした結果を格納するfield
+ *
+ * -- 副作用
+ *  stdin
+ */
+void parse_field(Field* f) {
+  for (int i = 0; i < 32; ++i) {
+    fgets(*field[i], 32, stdin);
+    get();
+  }
+}
+
+/*
+ * parse_stone
+ *
+ * 入力からStone部分をパースする　
+ *  
+ * -- 副作用
+ *  stdin
+ *  stones
+ */
+void parse_stone() {
+  for (int i = 0; i < n; ++i) for (int j = 0; j < 8; ++j) {
+    fgets(stones[i][j], 8, stdin);
+    get();
+  }
+}
+
+/**
+ * parse
+ *
+ * 入力をパースする
+ *
+ * -- Args
+ *  Field* f: パースした結果を格納するFieldのポインタ
+ *
+ * -- 副作用
+ *  stdin
+ *  stones
+ */
+void parse(Field* f) {
+  parse_field(&f);
+  scanf("%d¥n", &n);
+  for (int i = 0; i < n; ++i) {
+    parse_stone();
+    get(); // 改行読み捨て
+  }
+}
