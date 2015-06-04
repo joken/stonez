@@ -16,6 +16,7 @@ function check_memory()
     if count > 12 * 1024 * 1024 then
         os.exit()
     end
+    return count
 end
 
 function output_filename(i)
@@ -29,6 +30,7 @@ function generate(n)
     current_minos:dump(output_filename(1))
     -- それの前に集合のメンバの子を反復的に追加する
     for i = 2, n do
+        print(i, os.clock() * 1000 - _G.t0, check_memory())
         current_minos = childSet(current_minos)
         -- minos:add_range(current_minos)
         -- n-ominoesごとにファイルに出力
@@ -38,20 +40,16 @@ end
 
 -- ポリオミノの集合の子の集合を返す
 function childSet(minos)
+    local visited_children = Set()
     local children = Set()
     for mino in minos:values() do
-        children:add_range(mino:children())
-    end
-    local visited_children = Set()
-    for child in children:values() do
-        local hash = child:hash()
-        if child.size.x > LIMIT_SIZE or child.size.y > LIMIT_SIZE then
-            children:remove(child)
-        elseif not visited_children:contains(hash) then
-            visited_children:add(hash)
-            check_memory()
-        else
-            children:remove(child)
+        for child in mino:children():values() do
+            local hash = child:hash()
+            if child.size.x <= LIMIT_SIZE and child.size.y <= LIMIT_SIZE and
+                not visited_children:contains(hash) then
+                visited_children:add(hash)
+                children:add(child)
+            end
         end
     end
     return children
