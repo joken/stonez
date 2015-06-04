@@ -8,7 +8,7 @@ local MAX_SIZE
 -- サイズの制限(石なら8，フィールドなら32とか)
 local LIMIT_SIZE
 
--- ファイルに吐くとかしてメモリ馬鹿ほど食うのをどうにかしたい
+-- これを呼ぶとGCガッシャンガッシャンしてメモリを規定値以上使っていたら自害する
 function check_memory()
     collectgarbage()
     local count = collectgarbage "count"
@@ -24,21 +24,16 @@ end
 
 -- 固定されたn-オミノを生成する
 function generate(n)
-    -- ミノの形状に空白グリッドを作成
-    if n == 0 then
-        return Set()
-    end
-    -- 1つのモノオミノ
-    local minos = Set { Polyomino { Vector(0, 0) } }
-    local current_minos = Set(minos)
+    -- モノオミノから始める
+    local current_minos = Set { Polyomino { Vector(0, 0) } }
     current_minos:dump(output_filename(1))
     -- それの前に集合のメンバの子を反復的に追加する
     for i = 2, n do
         current_minos = childSet(current_minos)
         -- minos:add_range(current_minos)
+        -- n-ominoesごとにファイルに出力
         current_minos:dump(output_filename(i))
     end
-    return minos
 end
 
 -- ポリオミノの集合の子の集合を返す
@@ -62,7 +57,7 @@ function childSet(minos)
     return children
 end
 
--- ミノの集合から回転を取り除く
+-- ミノの集合から回転を取り除く(ユーティリティ的な)
 function one_sided(minos)
     -- 訪問済みの回転したミノの集合
     local vis = Set()
@@ -80,7 +75,7 @@ function one_sided(minos)
     return result
 end
 
--- ミノの集合から回転と反射を取り除く
+-- ミノの集合から回転と反射を取り除く(ユーティリティ的な)
 function free(minos)
     -- 訪問済みの変換したミノの集合
     local vis = Set()
