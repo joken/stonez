@@ -18,6 +18,9 @@ function check_memory()
     end
 end
 
+function output_filename(i)
+    return "polyominoes/" .. ("%04d"):format(i)
+end
 
 -- 固定されたn-オミノを生成する
 function generate(n)
@@ -28,10 +31,12 @@ function generate(n)
     -- 1つのモノオミノ
     local minos = Set { Polyomino { Vector(0, 0) } }
     local current_minos = Set(minos)
+    current_minos:dump(output_filename(1))
     -- それの前に集合のメンバの子を反復的に追加する
-    for i = 1, n - 1 do
+    for i = 2, n do
         current_minos = childSet(current_minos)
-        minos:add_range(current_minos)
+        -- minos:add_range(current_minos)
+        current_minos:dump(output_filename(i))
     end
     return minos
 end
@@ -143,6 +148,15 @@ function Set(initial_set)
             current_value = next(raw_set, current_value)
             return current_value
         end
+    end
+
+    function new_Set:dump(filename)
+        local file = io.open(filename, "w+")
+        for value in self:values() do
+            file:write(tostring(value) .. "\n")
+        end
+        file:flush()
+        file:close()
     end
 
     -- 初期集合が与えられていればその要素を追加する
@@ -327,15 +341,19 @@ function Polyomino(raw_shape)
     local meta = { }
 
     function meta:__tostring()
-        local s = "   "
-        for x = 0, bottom_right.x do
-            s = s .. ("%2X"):format(x)
-        end
-        s = s .. "\n"
+        -- local block = "[]"
+        -- local none  = "  "
+        local block = "1"
+        local none  = "0"
+        local s = "" -- "   "
+        -- for x = 0, bottom_right.x do
+        --     s = s .. ("%2X"):format(x)
+        -- end
+        -- s = s .. "\n"
         for y = 0, bottom_right.y do
-            s = s .. ("%2X"):format(y) .. ' '
+            -- s = s .. ("%2X"):format(y) .. ' '
             for x = 0, bottom_right.x do
-                s = s .. (position_set:contains(Vector(x, y)) and "[]" or "  ")
+                s = s .. (position_set:contains(Vector(x, y)) and block or none)
             end
             s = s .. "\n"
         end
