@@ -26,33 +26,35 @@ end
 -- 固定されたn-オミノを生成する
 function generate(n)
     -- モノオミノから始める
-    local current_minos = Set { Polyomino { Vector(0, 0) } }
-    current_minos:dump(output_filename(1))
+    local current_minos = PolyominoSet()
+    current_minos:add(Polyomino { Vector(1, 2), Vector(1, 3), Vector(2, 2), Vector(3, 2) })
     -- それの前に集合のメンバの子を反復的に追加する
     for i = 2, n do
         print(i, os.clock() * 1000 - _G.t0, check_memory())
         current_minos = childSet(current_minos)
         -- minos:add_range(current_minos)
         -- n-ominoesごとにファイルに出力
-        current_minos:dump(output_filename(i))
+        -- current_minos:dump(output_filename(i))
     end
 end
 
 -- ポリオミノの集合の子の集合を返す
 function childSet(minos)
     local visited_children = Set()
-    local children = Set()
+    local children_file = PolyominoSet()
     for mino in minos:values() do
         for child in mino:children():values() do
             local hash = child:hash()
-            if child.size.x <= LIMIT_SIZE and child.size.y <= LIMIT_SIZE and
-                not visited_children:contains(hash) then
+            if child.size.x <= LIMIT_SIZE
+                and child.size.y <= LIMIT_SIZE
+                and not visited_children:contains(hash) then
                 visited_children:add(hash)
-                children:add(child)
+                children_file:add(child)
             end
         end
     end
-    return children
+    minos:close()
+    return children_file
 end
 
 -- ミノの集合から回転を取り除く(ユーティリティ的な)
@@ -145,6 +147,9 @@ function Set(initial_set)
 
     function new_Set:dump(filename)
         local file = io.open(filename, "w+")
+        if not file then
+            error("could not open file: " .. tostring(filename))
+        end
         for value in self:values() do
             file:write(tostring(value) .. "\n")
         end
@@ -160,9 +165,86 @@ function Set(initial_set)
     return new_Set
 end
 
+-- 内部にファイルを用いたポリオミノ集合
+function PolyominoSet(filename)
+    local new_PolyominoSet = {
+        class = "PolyominoSet"
+    }
+    -- ファイル名の指定がないならデフォルトファイル名を用いる
+    local filename = filename or "tmp" .. os.tmpname()
+    -- ファイルハンドラ置き場
+    local flie_opened
+
+    -- オプションを指定して file_opened に開く
+    local function open(option)
+        local file, message = io.open(filename, option)
+        if not file then
+            error(message .. (" (mode %s)"):format(option))
+        end
+        flie_opened = file
+    end
+
+    -- ファイルを作っておく
+    -- open "w"
+    -- flie_opened:close()
+
+    function new_PolyominoSet:add(omino)
+        open "a"
+        flie_opened:write(tostring(omino:hash()))
+        flie_opened:write "\n"
+        flie_opened:flush()
+        flie_opened:close()
+    end
+
+    function new_PolyominoSet:values()
+        open "r"
+        local lines = flie_opened:lines()
+        return function ()
+            line = lines()
+            return (line and #line ~= 0) and Polyomino(line) or nil
+        end
+    end
+
+    function new_PolyominoSet:close()
+        if flie_opened then
+            flie_opened:close()
+        end
+        flie_opened = nil
+    end
+
+    return new_PolyominoSet
+end
+
 function Polyomino(raw_shape)
-    local new_Polyomino = { }
-    local position_set = Set(raw_shape)
+    local new_Polyomino = {
+        class = "Polyomino"
+    }
+    local position_set
+
+    -- ハッシュからposition_setを生成する
+    local function unhash(hash)
+        local positions = Set()
+        local bits_hex = 4
+        local y = 0
+        for line in hash:gmatch(("."):rep(MAX_SIZE / bits_hex)) do
+            local hex = tonumber(line, 16)
+            for x = MAX_SIZE - 1, 0, -1 do
+                if hex & 1 == 1 then
+                    positions:add(Vector(x, y))
+                end
+                hex = hex >> 1
+            end
+            y = y + 1
+        end
+        return positions
+    end
+
+    -- raw_shapeがstringならハッシュと見なしてハッシュから復元
+    if type(raw_shape) == "string" then
+        position_set = unhash(raw_shape)
+    else
+        position_set = Set(raw_shape)
+    end
 
     -- 境界を計算する
     local function calculate_boundary()
@@ -309,25 +391,23 @@ function Polyomino(raw_shape)
     end
 
     -- ハッシュ
-    function new_Polyomino:hash(max_size)
-        max_size = max_size or 32
-        local rows = { }
-        for i = 0, max_size - 1 do
-            rows[i] = { }
-            for j = 0, math.floor(max_size / 32) - 1 do
-                rows[i][j] = 0
-            end
-        end
-        for position in position_set:values() do
-            local index_y = math.floor(position.y / 2 ^ 32)
-            rows[position.x][index_y] = rows[position.x][index_y] + 2 ^ position.y
-        end
+    function new_Polyomino:hash()
         local s = ""
-        for i = 0, max_size - 1 do
-            for j = 0, math.floor(max_size / 32) - 1 do
-                s = s .. ("%08X"):format(rows[i][j])
+        local bits_hex = 4
+        for y = 0, MAX_SIZE - 1 do
+            for x = 0, MAX_SIZE - 1, bits_hex do
+                local hex = 0
+                for digit = 0, bits_hex - 1 do
+                    hex = hex + (
+                        position_set:contains(Vector(x + digit, y))
+                        and 2 ^ (bits_hex - digit - 1)
+                        or 0
+                    )
+                end
+                s = s .. ("%X"):format(hex)
             end
         end
+
         return s
     end
 
@@ -442,7 +522,23 @@ MAX_SIZE = 32
 -- サイズの制限(石なら8，フィールドなら32とか)
 LIMIT_SIZE = tonumber(args.limit)
 
--- p = Polyomino { Vector(1, 2), Vector(1, 3), Vector(2, 2), Vector(3, 2) }
+-- positions = Set()
+
+-- for i = 1, 128 do
+--     positions:add(Vector(math.random(32) - 1, math.random(32) - 1))
+-- end
+
+-- p = Polyomino(positions)
+
+-- -- p = Polyomino { Vector(1, 2), Vector(1, 3), Vector(2, 2), Vector(3, 2) }
+-- hash_p = p:hash()
+-- q = Polyomino(hash_p)
+-- hash_q = q:hash()
+
+-- print(hash_p)
+-- print(hash_q)
+-- print(hash_p == hash_q)
+
 -- s = Set(p:transforms())
 -- for omino in s:values() do
 --     print(omino)
