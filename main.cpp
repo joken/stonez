@@ -86,14 +86,12 @@ void solve(Field f, uint8_t look_nth_stone) {
   }
 
   solve(f, look_nth_stone + 1); // 今回は石を置かなかった 
-  Field field_backup = f;
 
   for (int y = 0; y < 32; ++y) for (int x = 0; x < 32; ++x) { // 32 * 32のフィールドのどこかに置く
     Position p(x, y);
     for (int i = 0; i < 8; ++i) { // 4回転 * 反転
       if (f.try_put_stone(look_nth_stone, p, i)) { // 置いてみる。おけなかったらfalse
         solve(f, look_nth_stone + 1); // 置く
-        f = field_backup;
       }
     }
   }
