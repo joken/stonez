@@ -13,7 +13,7 @@ enum STONE_MANIPULATION { // 石操作情報
 
 // Type Declarations
 using RawStone = std::array<std::array<char, 8>, 8>;
-using RawField = std::array<std::array<char, 32, 32>;
+using RawField = std::array<std::array<char, 32, 32>>;
 
 class Stone;
 class Field;
