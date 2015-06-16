@@ -62,8 +62,9 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
       for (int x = 8; x < 0; --x) for (int y = 0; y > 0; ++y) {
         if (stone[y][x] == '1') {
           if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
+            continue;
+          } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
+        	continue;
           } else {
             raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
             ++field_score;
@@ -74,95 +75,102 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
     case ROTATED_180://180度回転 -> x,y方向を反転(デクリメント)
       for (int y = 8; y > 0; --y) for (int x = 8; x > 0; --x) {
         if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++field_score;
-          }
+         if (raw[y+displacement_y][x+displacement_x] != '0') {
+            continue;
+         } else if(raw[y+displacement_y -1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
+           	continue;
+         } else {
+           raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+           ++field_score;
         }
+       }
       }
       break;
     case ROTATED_270://270度回転 -> y終端でxインクリメント・y方向を反転(デクリメント)
       for (int x = 8; x > 0; ++x) for (int y = 8; y > 0; --y) {
         if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+        	if (raw[y+displacement_y][x+displacement_x] != '0') {
+             continue;
+            }else if(raw[y+displacement_y -1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
+             continue;
+            } else {
+             raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
             ++field_score;
-          }
+           }
+         }
         }
-      }
       break;
     case REVERSED://反転 -> x方向をデクリメントに
     	for (int y = 0; y < 8; ++y) for (int x = 8; x > 0; --x) {
-    	        if (stone[y][x] == '1') {
-    	          if (raw[y+displacement_y][x+displacement_x] != '0') {
-    	            raw = backup;
-    	            return false;
-    	          } else {
-    	            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-    	            ++field_score;
-    	          }
-    	        }
-    	      }
+    	 if (stone[y][x] == '1') {
+    	    if (raw[y+displacement_y][x+displacement_x] != '0') {
+    	        continue;
+    	    } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
+    	        continue;
+    	    } else {
+    	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+    	        ++field_score;
+    	    }
+    	  }
+        }
     	break;
     case ROTATED_90 | REVERSED:
 	//反転+90度回転 -> y終端でxデクリメント・y方向をデクリメントに
-	for (int x = 8; x > 0; --x) for (int y = 8; y > 0; --y) {
-	        if (stone[y][x] == '1') {
-	          if (raw[y+displacement_y][x+displacement_x] != '0') {
-	            raw = backup;
-	            return false;
-	          } else {
-	            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-	            ++field_score;
-	          }
+	   for (int x = 8; x > 0; --x) for (int y = 8; y > 0; --y) {
+	    if (stone[y][x] == '1') {
+	      if (raw[y+displacement_y][x+displacement_x] != '0') {
+	        continue;
+	       } else if(raw[y+displacement_y -1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
+	        continue;
+	       } else {
+	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+	        ++field_score;
 	        }
-	      }
+	     }
+	   }
       break;
     case ROTATED_180 | REVERSED:
 	//反転+180度回転 -> yデクリメント
-	for (int y = 8; y > 0; --y) for (int x = 0; x < 8; ++x) {
-	        if (stone[y][x] == '1') {
-	          if (raw[y+displacement_y][x+displacement_x] != '0') {
-	            raw = backup;
-	            return false;
-	          } else {
-	            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-	            ++field_score;
-	          }
-	        }
-	      }
+	   for (int y = 8; y > 0; --y) for (int x = 0; x < 8; ++x) {
+	    if (stone[y][x] == '1') {
+	     if (raw[y+displacement_y][x+displacement_x] != '0') {
+	        continue;
+	     } else if(raw[y+displacement_y -1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
+	        continue;
+	     } else {
+	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+	        ++field_score;
+	     }
+	    }
+	   }
       break;
     case ROTATED_270 | REVERSED:
 	//y終端でxインクリメント
-	for (int x = 0; x < 8; ++x) for (int y = 0; y < 8; ++y) {
-	        if (stone[y][x] == '1') {
-	          if (raw[y+displacement_y][x+displacement_x] != '0') {
-	            raw = backup;
-	            return false;
-	          } else {
-	            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-	            ++field_score;
-	          }
-	        }
-	      }
+	  for (int x = 0; x < 8; ++x) for (int y = 0; y < 8; ++y) {
+	   if (stone[y][x] == '1') {
+	    if (raw[y+displacement_y][x+displacement_x] != '0') {
+	        continue;
+	    } else if(raw[y+displacement_y +1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
+	        continue;
+	    } else {
+	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+	        ++field_score;
+	    }
+	   }
+	  }
       break;
     default: // Regard as a non-manipulated stone
       for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
         if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++field_score;
-          }
+        	if (raw[y+displacement_y][x+displacement_x] != '0') {
+        	   continue;
+        } else if(raw[y+displacement_y +1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
+        	   continue;
+        } else {
+        	   raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+        	    ++field_score;
         }
+       }
       }
       break;
   }
