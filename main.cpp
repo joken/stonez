@@ -55,14 +55,12 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
   const RawStone& stone = stones[n].raw;
   RawField backup = raw;
   if (!(-7 <= displacement_y && displacement_y < 32 && -7 <= displacement_x && displacement_x < 32))  // 入力をVaridate
-    return false;
   switch (m) { // 害悪
-   //愚直にphase向きを反転していくスタイル
     case ROTATED_90://90度反転 -> y終端でxインクリメント・x方向を反転(デクリメント)
       for (int x = 8; x < 0; --x) for (int y = 0; y > 0; ++y) {
         if (stone[y][x] == '1') {
           if (raw[y+displacement_y][x+displacement_x] != '0') {
-            continue;
+            return false;
           } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
         	continue;
           } else {
@@ -76,7 +74,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
       for (int y = 8; y > 0; --y) for (int x = 8; x > 0; --x) {
         if (stone[y][x] == '1') {
          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            continue;
+            return false;
          } else if(raw[y+displacement_y -1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
            	continue;
          } else {
@@ -90,7 +88,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
       for (int x = 8; x > 0; ++x) for (int y = 8; y > 0; --y) {
         if (stone[y][x] == '1') {
         	if (raw[y+displacement_y][x+displacement_x] != '0') {
-             continue;
+             return false;
             }else if(raw[y+displacement_y -1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
              continue;
             } else {
@@ -104,7 +102,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
     	for (int y = 0; y < 8; ++y) for (int x = 8; x > 0; --x) {
     	 if (stone[y][x] == '1') {
     	    if (raw[y+displacement_y][x+displacement_x] != '0') {
-    	        continue;
+    	        return false;
     	    } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
     	        continue;
     	    } else {
@@ -119,7 +117,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
 	   for (int x = 8; x > 0; --x) for (int y = 8; y > 0; --y) {
 	    if (stone[y][x] == '1') {
 	      if (raw[y+displacement_y][x+displacement_x] != '0') {
-	        continue;
+	        return false;
 	       } else if(raw[y+displacement_y -1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
 	        continue;
 	       } else {
@@ -134,7 +132,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
 	   for (int y = 8; y > 0; --y) for (int x = 0; x < 8; ++x) {
 	    if (stone[y][x] == '1') {
 	     if (raw[y+displacement_y][x+displacement_x] != '0') {
-	        continue;
+	        return false;
 	     } else if(raw[y+displacement_y -1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
 	        continue;
 	     } else {
@@ -149,7 +147,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
 	  for (int x = 0; x < 8; ++x) for (int y = 0; y < 8; ++y) {
 	   if (stone[y][x] == '1') {
 	    if (raw[y+displacement_y][x+displacement_x] != '0') {
-	        continue;
+	        return false;
 	    } else if(raw[y+displacement_y +1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
 	        continue;
 	    } else {
@@ -163,7 +161,7 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
       for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
         if (stone[y][x] == '1') {
         	if (raw[y+displacement_y][x+displacement_x] != '0') {
-        	   continue;
+        	   return false;
         } else if(raw[y+displacement_y +1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
         	   continue;
         } else {
