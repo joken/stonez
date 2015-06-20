@@ -19,11 +19,10 @@ constexpr uint8_t REVERSED = 1,     // これが立ってたら反転してる
 // Type Declarations
 using RawStone = std::array<std::array<char, 8>, 8>;
 using RawField = std::array<std::array<char, 32>, 32>;
-using STONE_MANIPULATION = uint8_t;
 
 class Stone;
 class Field;
-
+class StoneManipulations;
 
 // Variable Forward Declarations
 extern Stone stones[256];
@@ -48,6 +47,14 @@ public:
   }
   bool try_put_stone(const uint8_t n, int y, int x, STONE_MANIPULATION m);
   const uint16_t score() const { return field_score; };
+};
+
+class StoneManipulations { 
+  public:
+    StoneManipulations(int8_t x, int8_t y, uint8_t rotated):
+      x(x), y(y), rotated(rotated) {} // This is correct. Initialize members variable by arguments.
+    int8_t x, y;
+    uint8_t rotated;
 };
 
 // Member Functions
