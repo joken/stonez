@@ -20,14 +20,23 @@ constexpr uint8_t REVERSED = 1,     // これが立ってたら反転してる
 using RawStone = std::array<std::array<char, 8>, 8>;
 using RawField = std::array<std::array<char, 32>, 32>;
 
+class StoneManipulations;
 class Stone;
 class Field;
-class StoneManipulations;
 
 // Variable Forward Declarations
 extern Stone stones[256];
 
 // Type Definitions
+
+class StoneManipulations { 
+  public:
+    StoneManipulations(){}
+    StoneManipulations(int8_t x, int8_t y, uint8_t rotated):
+      x(x), y(y), rotated(rotated) {} // This is correct. Initialize members variable by arguments.
+    int8_t x = 0, y = 0;
+    uint8_t rotated = 0;
+};
 class Stone {
 public:
   RawStone raw;
@@ -36,34 +45,31 @@ public:
 class Field {
 private:
   const Stone* put_stones[256];
-  STONE_MANIPULATION manipulations[256];
+  StoneManipulations manipulations[256];
   uint16_t field_score = 0;
 public:
   RawField raw;
 public:
-  void put_stone(const uint8_t n, STONE_MANIPULATION m) {
+
+  void put_stone(const uint8_t n, StoneManipulations m, uint8_t score) {
     put_stones[n] = &stones[n];
     manipulations[n] = m;
+    field_score = score;
   }
-  bool try_put_stone(const uint8_t n, int y, int x, STONE_MANIPULATION m);
+  bool try_put_stone(const uint8_t n, StoneManipulations m);
   const uint16_t score() const { return field_score; };
 };
 
-class StoneManipulations { 
-  public:
-    StoneManipulations(int8_t x, int8_t y, uint8_t rotated):
-      x(x), y(y), rotated(rotated) {} // This is correct. Initialize members variable by arguments.
-    int8_t x, y;
-    uint8_t rotated;
-};
-
 // Member Functions
-bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_x, STONE_MANIPULATION m) {
+bool Field::try_put_stone(const uint8_t n, StoneManipulations m) {
   const RawStone& stone = stones[n].raw;
+  uint8_t additional_score = 0;
   RawField backup = raw;
+  int8_t displacement_x = m.x,
+         displacement_y = m.y;
   if (!(-7 <= displacement_y && displacement_y < 32 && -7 <= displacement_x && displacement_x < 32))  // 入力をVaridate
 	  return false;
-  switch (m) { // 害悪
+  switch (m.rotated) { // 害悪
     case ROTATED_90://90度反転 -> y終端でxインクリメント・x方向を反転(デクリメント)
       for (int x = 8; x < 0; --x) for (int y = 0; y > 0; ++y) {
         if (stone[y][x] == '1') {
@@ -73,10 +79,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
         	continue;
           } else {
             raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++field_score;
+            ++additional_score;
           }
         }
       }
+      put_stone(n, m, additional_score);
       break;
     case ROTATED_180://180度回転 -> x,y方向を反転(デクリメント)
       for (int y = 8; y > 0; --y) for (int x = 8; x > 0; --x) {
@@ -87,10 +94,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
            	continue;
          } else {
            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-           ++field_score;
+           ++additional_score;
         }
        }
       }
+      put_stone(n, m, additional_score);
       break;
     case ROTATED_270://270度回転 -> y終端でxインクリメント・y方向を反転(デクリメント)
       for (int x = 8; x > 0; ++x) for (int y = 8; y > 0; --y) {
@@ -101,10 +109,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
              continue;
             } else {
              raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++field_score;
+            ++additional_score;
            }
          }
         }
+      put_stone(n, m, additional_score);
       break;
     case REVERSED://反転 -> x方向をデクリメントに
     	for (int y = 0; y < 8; ++y) for (int x = 8; x > 0; --x) {
@@ -115,10 +124,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
     	        continue;
     	    } else {
     	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-    	        ++field_score;
+    	        ++additional_score;
     	    }
     	  }
         }
+        put_stone(n, m, additional_score);
     	break;
     case ROTATED_90 | REVERSED:
 	//反転+90度回転 -> y終端でxデクリメント・y方向をデクリメントに
@@ -130,10 +140,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
 	        continue;
 	       } else {
 	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-	        ++field_score;
+	        ++additional_score;
 	        }
 	     }
 	   }
+           put_stone(n, m, additional_score);
       break;
     case ROTATED_180 | REVERSED:
 	//反転+180度回転 -> yデクリメント
@@ -145,10 +156,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
 	        continue;
 	     } else {
 	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-	        ++field_score;
+	        ++additional_score;
 	     }
 	    }
 	   }
+           put_stone(n, m, additional_score);
       break;
     case ROTATED_270 | REVERSED:
 	//y終端でxインクリメント
@@ -160,10 +172,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
 	        continue;
 	    } else {
 	        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-	        ++field_score;
+	        ++additional_score;
 	    }
 	   }
 	  }
+          put_stone(n, m, additional_score);
       break;
     default: // Regard as a non-manipulated stone
       for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
@@ -174,10 +187,11 @@ bool Field::try_put_stone(const uint8_t n, int displacement_y, int displacement_
         	   continue;
         } else {
         	   raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-        	    ++field_score;
+        	    ++additional_score;
         }
        }
       }
+      put_stone(n, m, additional_score);
       break;
   }
   return true;
@@ -242,7 +256,7 @@ void solve(Field f, uint8_t look_nth_stone) {
 
   for (int i = 0; i < 8; ++i) { // 回転反転組み合わせを試す
     for (int y = -7; y < 32; ++y) for (int x = -7; x < 32; ++x) { // (32+8) * (32+8)のフィールドのどこかに置く
-      if (f.try_put_stone(look_nth_stone, y, x, i))
+      if (f.try_put_stone(look_nth_stone, StoneManipulations(x, y, i)))
         solve(f, look_nth_stone + 1);
     }
   }
