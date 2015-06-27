@@ -70,6 +70,8 @@ bool Field::try_put_stone(const uint8_t n, StoneManipulations m) {
   if (!(-7 <= displacement_y && displacement_y < 32 && -7 <= displacement_x && displacement_x < 32))  // 入力をVaridate
     return false;
 
+  // Memo: C++のラムダ式は、JavaScriptの関数リテラルの様に扱える
+  // ex. auto 関数名 = [ターゲットのスコープの必要な変数の参照](引数){関数の中身};
   auto scan = [this, &stone, &additional_score, &backup, &displacement_x, &displacement_y](int x, int y) {
     if (stone[y][x] == '1') {
       if (raw[y+displacement_y][x+displacement_x] != '0') {
