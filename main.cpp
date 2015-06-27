@@ -69,131 +69,84 @@ bool Field::try_put_stone(const uint8_t n, StoneManipulations m) {
          displacement_y = m.y;
   if (!(-7 <= displacement_y && displacement_y < 32 && -7 <= displacement_x && displacement_x < 32))  // 入力をVaridate
     return false;
+
+  auto scan = [this, &stone, &additional_score, &backup, &displacement_x, &displacement_y](int x, int y) {
+    if (stone[y][x] == '1') {
+      if (raw[y+displacement_y][x+displacement_x] != '0') {
+        raw = backup;
+        return false;
+      } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
+        return true;
+      } else {
+        raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
+        ++additional_score;
+      }
+    }
+    return true;
+  };
+
+
   switch (m.rotated) { // 害悪
     case ROTATED_90: //90度反転 -> y終端でxインクリメント・x方向を反転(デクリメント)
       for (int x = 8; x < 0; --x) for (int y = 0; y > 0; ++y) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     case ROTATED_180: //180度回転 -> x,y方向を反転(デクリメント)
       for (int y = 8; y > 0; --y) for (int x = 8; x > 0; --x) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y -1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     case ROTATED_270: //270度回転 -> y終端でxインクリメント・y方向を反転(デクリメント)
       for (int x = 8; x > 0; ++x) for (int y = 8; y > 0; --y) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y -1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     case REVERSED: //反転 -> x方向をデクリメントに
       for (int y = 0; y < 8; ++y) for (int x = 8; x > 0; --x) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y +1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     case ROTATED_90 | REVERSED: //反転+90度回転 -> y終端でxデクリメント・y方向をデクリメントに
       for (int x = 8; x > 0; --x) for (int y = 8; y > 0; --y) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y -1][x+displacement_x -1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     case ROTATED_180 | REVERSED: //反転+180度回転 -> yデクリメント
       for (int y = 8; y > 0; --y) for (int x = 0; x < 8; ++x) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y -1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     case ROTATED_270 | REVERSED: //y終端でxインクリメント
       for (int x = 0; x < 8; ++x) for (int y = 0; y < 8; ++y) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y +1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
       break;
     default: // Regard as a non-manipulated stone
       for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
-        if (stone[y][x] == '1') {
-          if (raw[y+displacement_y][x+displacement_x] != '0') {
-            raw = backup;
-            return false;
-          } else if(raw[y+displacement_y +1][x+displacement_x +1] != '0'){//1つ先が空いてる(隣接してる)か
-            continue;
-          } else {
-            raw[y+displacement_y][x+displacement_x] = '2'; // 2を石とするならば
-            ++additional_score;
-          }
+        if (!scan(x, y)) {
+          return false;
         }
       }
       put_stone(n, m, additional_score);
