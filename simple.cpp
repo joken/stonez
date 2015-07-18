@@ -3,8 +3,7 @@
 #include <cstdio>
 #include <array>
 #include <utility>
-
-#include <boost/test/unit_test.hpp>
+#include <cassert>
 
 using RawField = std::array<std::array<char, 32>, 32>;
 using RawStone = std::array<std::array<char, 8>, 8>;
@@ -12,7 +11,7 @@ using RawStone = std::array<std::array<char, 8>, 8>;
 constexpr int ROTATE_90 = 1,
           ROTATE_180 = 2,
           ROTATE_270 = 4,
-          REVERSED = 8;
+          REVERSE = 8;
 
 class Field {
   private:
@@ -95,7 +94,10 @@ void DumpStones() {
     puts("");
   }
 }
+
+void test();
 int main() {
+  test();
   Field reserved_field;
   // get_problemfile();
   Parse(&reserved_field);
@@ -106,33 +108,33 @@ int main() {
   return 0;
 }
 
-RawStone StoneRotate(RawStone& stone, int manipulate_info) {
+RawStone StoneRotate(RawStone stone, int manipulate_info) {
   RawStone rotated;
   switch (manipulate_info) {
     case ROTATE_90:
-      for (int y = 0; y < 8; ++y) {
-        for (int x = 0; x < 8; ++x){
-          rotated[y][x] = stone[x][7-y];
+      for (int a = 0; a < 8; ++a) {
+        for (int b = 0; b < 8; ++b) {
+          rotated[b][7-a] = stone[a][b];
         }
       }
       return rotated;
     case ROTATE_180:
-      return StoneRotate(std::move(StoneRotate(stone, ROTATE_90)), ROTATE_90);
+      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_90)), ROTATE_90);
     case ROTATE_270:
-      return StoneRotate(std::move(StoneRotate(stone, ROTATE_180)), ROTATE_90);
-    case REVERSED:
+      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_180)), ROTATE_90);
+    case REVERSE:
       for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
           rotated[y][x] = stone[y][7-x];
         }
       }
       return rotated;
-    case REVERSED | ROTATE_90:
-      return StoneRotate(std::move(StoneRotate(stone, ROTATE_90), REVERSED);
-    case REVERSED | ROTATE_180:
-      return StoneRotate(std::move(StoneRotate(stone, ROTATE_180), REVERSED);
-    case REVERSED | ROTATE_270:
-      return StoneRotate(std::move(StoneRotate(stone, ROTATE_270), REVERSED);
+    case REVERSE | ROTATE_90:
+      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_90)), REVERSE);
+    case REVERSE | ROTATE_180:
+      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_180)), REVERSE);
+    case REVERSE | ROTATE_270:
+      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_270)), REVERSE);
   }
   return stone;
 }
@@ -162,28 +164,26 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
 }
 
 //
-BOOST_AUTO_TEST_CASE(StoneRotate_Test) {
-  RawStone rawstone = {
-    "11111111",
-    "00000000",
-    "00000000",
-    "00000000",
-    "00000000",
-    "00000000",
-    "00000000",
-    "00000000"
-  };
-  RawStone rotated_90 = {
-    "00000001",
-    "00000001",
-    "00000001",
-    "00000001",
-    "00000001",
-    "00000001",
-    "00000001",
-    "00000001"
-  };
-  RawStone rotated_by_f = std::move(StoneRotate(rawstone));
+void test() {
+  RawStone rawstone;
+  for (int x = 0; x < 8; ++x) {
+    rawstone[0][x] = '1';
+  }
+  for (int y = 1; y < 8; ++y) {
+    for (int x = 0; x < 8; ++x) {
+      rawstone[y][x] = '0';
+    }
+  }
+  RawStone rotated_90;
+  for (int y = 0; y < 8; ++y) {
+    rotated_90[y][7] = '1';
+  }
+  for (int y = 0; y < 8; ++y) {
+    for (int x = 0; x < 7; ++x) {
+      rotated_90[y][x] = '0';
+    }
+  }
+  RawStone rotated_by_f = std::move(StoneRotate(rawstone, ROTATE_270|REVERSE));
 
-  BOOST_CHECK_EQUAL(rotated_90, rotated_by_f);
+  assert(rotated_by_f == rotated_90);
 }
