@@ -29,12 +29,11 @@ class Stone {
     RawStone raw = {};
 };
 
-Field max_score_field;
+Field max_score_field; // 最終的にscoreが最大になっているfieldが入る
 Stone reserved_stones[256];
 int number_of_stone = 0;
 
-
-void Parse(Field* f) {
+void Parse(Field* f) { // 今後、標準入力以外の場所から入力を受け付けるのかしら
   for (int i = 0; i < 32; ++i) {
     fread(f->raw[i].data(), sizeof(char[32]), 1, stdin);
     getchar(); //CR
@@ -63,20 +62,20 @@ void DumpField(const Field& f) {
 
 
 void Solve(Field f, const int look_nth_stone) {
-  if (look_nth_stone > number_of_stone) {
+  if (look_nth_stone > number_of_stone) { //終了判定
     if (f.Score() > max_score_field.Score()) {
       max_score_field = f;
     }
       return;
   }
 
-  Solve(f, look_nth_stone + 1);
+  Solve(f, look_nth_stone + 1); // 石を置かない場合
   Field backup = f;
 
   for (int x = -7; x < 32; ++x) {
     for (int y = -7; y < 32; ++y) {
       for (int i = 0; i < 8; ++i) {
-        if (f.TryPutStone(look_nth_stone, x, y, i)) {
+        if (f.TryPutStone(look_nth_stone, x, y, i)) { //置いてみておけたら
           Solve(f, look_nth_stone+1);
           f = backup;
         }
@@ -110,7 +109,7 @@ int main() {
   return 0;
 }
 
-RawStone StoneRotate(RawStone stone, int manipulate_info) {
+RawStone StoneRotate(RawStone stone, int manipulate_info) { //石回す
   RawStone rotated;
   switch (manipulate_info) {
     case ROTATE_90:
@@ -138,29 +137,31 @@ RawStone StoneRotate(RawStone stone, int manipulate_info) {
     case REVERSE | ROTATE_270:
       return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_270)), REVERSE);
   }
-  return stone;
+  return stone; // 0のとき
 }
 
 bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate_info) {
-  // 書き換えるので、もどせるようにしておく
-  int dx[] = {-1, 0, 0, 1},
+  int dx[] = {-1, 0, 0, 1}, // 隣接判定の上下左右
       dy[] = {0, -1, 1, 0};
+  // 書き換えるので、もどせるようにしておく
   RawField backup_field = raw;
   int backup_score = score;
+  // 石回す
   RawStone sraw = StoneRotate(std::move(reserved_stones[stone_number].raw), manipulate_info);
+  // score = 0なら隣接判定しない
   bool exist_neighbor = (score == 0);
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
-      if (y + base_y < 0 || y + base_y >= 32 || x + base_x < 0 || x + base_x >= 32) {
+      if (y + base_y < 0 || y + base_y >= 32 || x + base_x < 0 || x + base_x >= 32) { // 範囲チェック
         continue;
       }
       if (sraw[y][x] == '1') {
-        if(raw[y + base_y][x + base_x] == '1') {
+        if(raw[y + base_y][x + base_x] != '0') { //かぶるとき
           raw = backup_field;
           score = backup_score;
           return false;
         }
-        if (! exist_neighbor) {
+        if (! exist_neighbor) { //隣接判定
           for (int i = 0; i < 4; ++i) {
             if (y + base_y + dy[i] < 0 || y + base_y + dy[i] >= 32 || x + base_x + dx[i] < 0 || x + base_x + dx[i] >= 32) {
               continue;
@@ -170,6 +171,7 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
             }
           }
         }
+        // 更新
         raw[y + base_y][x + base_x] = '2';
         ++score;
       }
@@ -179,7 +181,7 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
 }
 
 //
-void test() {
+void test() { //テスト走らせる
   RawStone rawstone;
   for (int x = 0; x < 8; ++x) {
     rawstone[0][x] = '1';
