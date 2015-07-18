@@ -143,7 +143,7 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
   // 書き換えるので、もどせるようにしておく
   RawField backup_field = raw;
   int backup_score = score;
-  RawStone& sraw = reserved_stones[stone_number].raw;
+  RawStone sraw = StoneRotate(std::move(reserved_stones[stone_number].raw), manipulate_info);
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       if (y + base_y < 0 || y + base_y >= 32 || x + base_x < 0 || x + base_x >= 32) {
