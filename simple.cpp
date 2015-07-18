@@ -3,8 +3,15 @@
 #include <cstdio>
 #include <array>
 
+#include <boost/test/unit_test.hpp>
+
 using RawField = std::array<std::array<char, 32>, 32>;
 using RawStone = std::array<std::array<char, 8>, 8>;
+
+constexpr int ROTATE_90 = 1,
+          ROTATE_180 = 2,
+          ROTATE_270 = 4,
+          REVERSED = 8;
 
 class Field {
   private:
@@ -98,8 +105,39 @@ int main() {
   return 0;
 }
 
+RawStone StoneRotate(RawStone& stone, int manipulate_info) {
+  RawStone rotated;
+  switch (manipulate_info) {
+    case ROTATE_90:
+      for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x){
+          rotated[y][x] = stone[x][7-y];
+        }
+      }
+      return rotated;
+    case ROTATE_180:
+      return StoneRotate(std::move(StoneRotate(stone, ROTATE_90)), ROTATE_90);
+    case ROTATE_270:
+      return StoneRotate(std::move(StoneRotate(stone, ROTATE_180)), ROTATE_90);
+    case REVERSED:
+      for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+          rotated[y][x] = stone[y][7-x];
+        }
+      }
+      return rotated;
+    case REVERSED | ROTATE_90:
+      return StoneRotate(std::move(StoneRotate(stone, ROTATE_90), REVERSED);
+    case REVERSED | ROTATE_180:
+      return StoneRotate(std::move(StoneRotate(stone, ROTATE_180), REVERSED);
+    case REVERSED | ROTATE_270:
+      return StoneRotate(std::move(StoneRotate(stone, ROTATE_270), REVERSED);
+  }
+  return stone;
+}
 
 bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate_info) {
+  // 書き換えるので、もどせるようにしておく
   RawField backup_field = raw;
   int backup_score = score;
   RawStone& sraw = reserved_stones[stone_number].raw;
@@ -109,7 +147,7 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
         continue;
       }
       if (sraw[y][x] == '1') {
-        if(raw[y + base_y][x + base_x] == '1') {
+        if(backup_score != 0 && raw[y + base_y][x + base_x] == '1') { //score = 1、つまり最初に置く石なら判定しない
           raw = backup_field;
           score = backup_score;
           return false;
