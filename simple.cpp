@@ -75,9 +75,11 @@ void Solve(Field f, const int look_nth_stone) {
 
   for (int x = -7; x < 32; ++x) {
     for (int y = -7; y < 32; ++y) {
-      if (f.TryPutStone(look_nth_stone, x, y, 0)) {
-        Solve(f, look_nth_stone+1);
-        f = backup;
+      for (int i = 0; i < 8; ++i) {
+        if (f.TryPutStone(look_nth_stone, x, y, i)) {
+          Solve(f, look_nth_stone+1);
+          f = backup;
+        }
       }
     }
   }
