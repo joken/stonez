@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <array>
+#include <utility>
 
 #include <boost/test/unit_test.hpp>
 
@@ -158,4 +159,31 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
     }
   }
   return true;
+}
+
+//
+BOOST_AUTO_TEST_CASE(StoneRotate_Test) {
+  RawStone rawstone = {
+    "11111111",
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000000",
+    "00000000"
+  };
+  RawStone rotated_90 = {
+    "00000001",
+    "00000001",
+    "00000001",
+    "00000001",
+    "00000001",
+    "00000001",
+    "00000001",
+    "00000001"
+  };
+  RawStone rotated_by_f = std::move(StoneRotate(rawstone));
+
+  BOOST_CHECK_EQUAL(rotated_90, rotated_by_f);
 }
