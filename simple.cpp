@@ -143,21 +143,34 @@ RawStone StoneRotate(RawStone stone, int manipulate_info) {
 
 bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate_info) {
   // 書き換えるので、もどせるようにしておく
+  int dx[] = {-1, 0, 0, 1},
+      dy[] = {0, -1, 1, 0};
   RawField backup_field = raw;
   int backup_score = score;
   RawStone sraw = StoneRotate(std::move(reserved_stones[stone_number].raw), manipulate_info);
+  bool exist_neighbor = (score == 0);
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       if (y + base_y < 0 || y + base_y >= 32 || x + base_x < 0 || x + base_x >= 32) {
         continue;
       }
       if (sraw[y][x] == '1') {
-        if(backup_score != 0 && raw[y + base_y][x + base_x] == '1') { //score = 1、つまり最初に置く石なら判定しない
+        if(raw[y + base_y][x + base_x] == '1') {
           raw = backup_field;
           score = backup_score;
           return false;
         }
-        raw[y + base_y][x + base_x] = '1';
+        if (! exist_neighbor) {
+          for (int i = 0; i < 4; ++i) {
+            if (y + base_y + dy[i] < 0 || y + base_y + dy[i] >= 32 || x + base_x + dx[i] < 0 || x + base_x + dx[i] >= 32) {
+              continue;
+            }
+            if (raw[y + base_y + dy[i]][x + base_x + dx[i]] == '2') {
+              exist_neighbor = true;
+            }
+          }
+        }
+        raw[y + base_y][x + base_x] = '2';
         ++score;
       }
     }
