@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <array>
-#include <utility>
 #include <cassert>
 
 typedef std::array<std::array<char, 32>, 32> RawField;
