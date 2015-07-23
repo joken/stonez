@@ -1,7 +1,6 @@
 #include "field.h"
 #include "stone.h"
 
-
 bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_info) {
   int dx[] = {-1, 0, 0, 1}, // 隣接判定の上下左右
       dy[] = {0, -1, 1, 0};
@@ -12,6 +11,9 @@ bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_inf
   RawStone sraw = StoneRotate(stone.raw, manipulate_info);
   // score = 0なら隣接判定しない
   bool exist_neighbor = (score == 0);
+
+
+  // 石が置けるか判定する
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {
       if (y + base_y < 0 || y + base_y >= 32 || x + base_x < 0 || x + base_x >= 32) { // 範囲チェック
@@ -25,7 +27,7 @@ bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_inf
         }
         if (! exist_neighbor) { //隣接判定
           for (int i = 0; i < 4; ++i) {
-            if (y + base_y + dy[i] < 0 || y + base_y + dy[i] >= 32 || x + base_x + dx[i] < 0 || x + base_x + dx[i] >= 32) {
+            if (y + base_y + dy[i] < 0 || y + base_y + dy[i] >= 32 || x + base_x + dx[i] < 0 || x + base_x + dx[i] >= 32) { //範囲チェック
               continue;
             }
             if (raw[y + base_y + dy[i]][x + base_x + dx[i]] == '2') {

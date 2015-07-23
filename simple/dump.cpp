@@ -3,6 +3,7 @@
 #include "field.h"
 
 #include <cstdio>
+
 void DumpField(const Field& f) {
   for (int i = 0; i < 32; ++i) {
     for (int j = 0; j < 32; ++j) {
