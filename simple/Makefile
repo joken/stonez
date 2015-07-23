@@ -1,2 +1,2 @@
 CXX = g++
-main: main.cpp
+main: main.cpp stone.cpp
