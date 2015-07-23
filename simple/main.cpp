@@ -4,10 +4,7 @@
 #include "input.h"
 
 
-#include<iostream>
-#include <cstdlib>
-#include <cstdio>
-#include <cassert>
+#include <iostream>
 
 int number_of_stone = 0;
 Stone reserved_stones[256];
@@ -43,9 +40,6 @@ void Solve(Field f, Field& max_score_field, const int look_nth_stone) {
   }
 }
 
-
-
-void test();
 int main() {
   test();
   Field reserved_field;
@@ -61,26 +55,3 @@ int main() {
 
 
 //
-void test() { //テスト走らせる
-  RawStone rawstone;
-  for (int x = 0; x < 8; ++x) {
-    rawstone[0][x] = '1';
-  }
-  for (int y = 1; y < 8; ++y) {
-    for (int x = 0; x < 8; ++x) {
-      rawstone[y][x] = '0';
-    }
-  }
-  RawStone rotated_90;
-  for (int y = 0; y < 8; ++y) {
-    rotated_90[y][7] = '1';
-  }
-  for (int y = 0; y < 8; ++y) {
-    for (int x = 0; x < 7; ++x) {
-      rotated_90[y][x] = '0';
-    }
-  }
-  RawStone rotated_by_f = StoneRotate(rawstone, ROTATE_270|REVERSE);
-
-  assert(rotated_by_f == rotated_90);
-}
