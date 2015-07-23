@@ -5,19 +5,20 @@
 #include <utility>
 #include <cassert>
 
-using RawField = std::array<std::array<char, 32>, 32>;
-using RawStone = std::array<std::array<char, 8>, 8>;
+typedef std::array<std::array<char, 32>, 32> RawField;
+typedef std::array<std::array<char, 8>, 8> RawStone;
 
-constexpr int ROTATE_90 = 1,
+const int ROTATE_90 = 1,
           ROTATE_180 = 2,
           ROTATE_270 = 4,
           REVERSE = 8;
 
 class Field {
   private:
-    int score = 0;
+    int score;
   public:
-    RawField raw = {};
+    Field(): score(0) {}
+    RawField raw;
     int Score() const {
       return score;
     }
@@ -26,7 +27,7 @@ class Field {
 
 class Stone {
   public:
-    RawStone raw = {};
+    RawStone raw;
 };
 
 Field max_score_field; // 最終的にscoreが最大になっているfieldが入る
@@ -120,9 +121,9 @@ RawStone StoneRotate(RawStone stone, int manipulate_info) { //石回す
       }
       return rotated;
     case ROTATE_180:
-      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_90)), ROTATE_90);
+      return StoneRotate(StoneRotate(stone, ROTATE_90), ROTATE_90);
     case ROTATE_270:
-      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_180)), ROTATE_90);
+      return StoneRotate(StoneRotate(stone, ROTATE_180), ROTATE_90);
     case REVERSE:
       for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
@@ -131,11 +132,11 @@ RawStone StoneRotate(RawStone stone, int manipulate_info) { //石回す
       }
       return rotated;
     case REVERSE | ROTATE_90:
-      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_90)), REVERSE);
+      return StoneRotate(StoneRotate(stone, ROTATE_90), REVERSE);
     case REVERSE | ROTATE_180:
-      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_180)), REVERSE);
+      return StoneRotate(StoneRotate(stone, ROTATE_180), REVERSE);
     case REVERSE | ROTATE_270:
-      return StoneRotate(std::move(StoneRotate(std::move(stone), ROTATE_270)), REVERSE);
+      return StoneRotate(StoneRotate(stone, ROTATE_270), REVERSE);
   }
   return stone; // 0のとき
 }
@@ -147,7 +148,7 @@ bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate
   RawField backup_field = raw;
   int backup_score = score;
   // 石回す
-  RawStone sraw = StoneRotate(std::move(reserved_stones[stone_number].raw), manipulate_info);
+  RawStone sraw = StoneRotate(reserved_stones[stone_number].raw, manipulate_info);
   // score = 0なら隣接判定しない
   bool exist_neighbor = (score == 0);
   for (int x = 0; x < 8; ++x) {
@@ -200,7 +201,7 @@ void test() { //テスト走らせる
       rotated_90[y][x] = '0';
     }
   }
-  RawStone rotated_by_f = std::move(StoneRotate(rawstone, ROTATE_270|REVERSE));
+  RawStone rotated_by_f = StoneRotate(rawstone, ROTATE_270|REVERSE);
 
   assert(rotated_by_f == rotated_90);
 }
