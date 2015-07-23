@@ -12,6 +12,11 @@ const int ROTATE_90 = 1,
           ROTATE_270 = 4,
           REVERSE = 8;
 
+class Stone {
+  public:
+    RawStone raw;
+};
+
 class Field {
   private:
     int score;
@@ -21,19 +26,16 @@ class Field {
     int Score() const {
       return score;
     }
-    bool TryPutStone(int stone_number, int base_x, int base_y, int manipulate_info);
+    bool TryPutStone(Stone& s, int base_x, int base_y, int manipulate_info);
 };
 
-class Stone {
-  public:
-    RawStone raw;
-};
 
-Field max_score_field; // 最終的にscoreが最大になっているfieldが入る
-Stone reserved_stones[256];
-int number_of_stone = 0;
+  int number_of_stone = 0;
+  Stone reserved_stones[256];
+  Field max_score_field; // 最終的にscoreが最大になっているfieldが入る
 
-void Parse(Field* f) { // 今後、標準入力以外の場所から入力を受け付けるのかしら
+int Parse(Field* f, Stone* reserved) { // 今後、標準入力以外の場所から入力を受け付けるのかしら
+  int number_of_stone;
   for (int i = 0; i < 32; ++i) {
     fread(f->raw[i].data(), sizeof(char[32]), 1, stdin);
     getchar(); //CR
@@ -42,7 +44,7 @@ void Parse(Field* f) { // 今後、標準入力以外の場所から入力を受
   scanf("\n%d\n", &number_of_stone);
   for (int i = 0; i < number_of_stone; ++i) {
     for (int j = 0; j < 8; ++j) {
-      fread(reserved_stones[i].raw[j].data(), sizeof(char[8]), 1, stdin);
+      fread(reserved[i].raw[j].data(), sizeof(char[8]), 1, stdin);
       getchar(); //CR
       getchar(); //LF
     }
@@ -50,6 +52,7 @@ void Parse(Field* f) { // 今後、標準入力以外の場所から入力を受
     getchar(); //LF
   }
 
+  return number_of_stone;
 }
 void DumpField(const Field& f) {
   for (int i = 0; i < 32; ++i) {
@@ -74,7 +77,7 @@ void DumpStones() {
   }
 }
 
-void Solve(Field f, const int look_nth_stone) {
+void Solve(Field f, Field& max_score_field, const int look_nth_stone) {
   if (look_nth_stone > number_of_stone) { //終了判定
     if (f.Score() > max_score_field.Score()) {
       max_score_field = f;
@@ -82,14 +85,14 @@ void Solve(Field f, const int look_nth_stone) {
       return;
   }
 
-  Solve(f, look_nth_stone + 1); // 石を置かない場合
+  Solve(f, max_score_field, look_nth_stone + 1); // 石を置かない場合
   Field backup = f;
 
   for (int x = -7; x < 32; ++x) {
     for (int y = -7; y < 32; ++y) {
       for (int i = 0; i < 8; ++i) {
-        if (f.TryPutStone(look_nth_stone, x, y, i)) { //置いてみておけたら
-          Solve(f, look_nth_stone+1);
+        if (f.TryPutStone(reserved_stones[look_nth_stone], x, y, i)) { //置いてみておけたら
+          Solve(f, max_score_field, look_nth_stone+1);
           f = backup;
         }
       }
@@ -104,8 +107,8 @@ int main() {
   test();
   Field reserved_field;
   // get_problemfile();
-  Parse(&reserved_field);
-  Solve(reserved_field, 0);
+  number_of_stone = Parse(&reserved_field, reserved_stones);
+  Solve(reserved_field, max_score_field, 0);
   DumpField(max_score_field);
   // solve();
   // submit_answer();
@@ -143,14 +146,14 @@ RawStone StoneRotate(RawStone stone, int manipulate_info) { //石回す
   return stone; // 0のとき
 }
 
-bool Field::TryPutStone(int stone_number, int base_x, int base_y, int manipulate_info) {
+bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_info) {
   int dx[] = {-1, 0, 0, 1}, // 隣接判定の上下左右
       dy[] = {0, -1, 1, 0};
   // 書き換えるので、もどせるようにしておく
   RawField backup_field = raw;
   int backup_score = score;
   // 石回す
-  RawStone sraw = StoneRotate(reserved_stones[stone_number].raw, manipulate_info);
+  RawStone sraw = StoneRotate(stone.raw, manipulate_info);
   // score = 0なら隣接判定しない
   bool exist_neighbor = (score == 0);
   for (int x = 0; x < 8; ++x) {
