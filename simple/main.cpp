@@ -1,11 +1,11 @@
 #include "stone.h"
 #include "field.h"
+#include "test.h"
 
 
 #include<iostream>
 #include <cstdlib>
 #include <cstdio>
-#include <array>
 #include <cassert>
 
 
@@ -33,22 +33,6 @@ int Parse(Field* f, Stone* reserved) { // 今後、標準入力以外の場所�
   }
 
   return number_of_stone;
-}
-void DumpField(const Field& f) {
-  for (int i = 0; i < 32; ++i) {
-    for (int j = 0; j < 32; ++j) {
-      putc(f.raw[i][j], stdout);
-    }
-    puts("");
-  }
-}
-void DumpStone(const Stone& s) {
-  for (int j = 0; j < 8; ++j) {
-    for (int k = 0; k < 8; ++k) {
-      putc(s.raw[j][k], stdout);
-    }
-    puts("");
-  }
 }
 void DumpStones() {
   for (int i = 0; i < number_of_stone; ++i) {
