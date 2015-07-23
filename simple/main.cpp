@@ -1,6 +1,6 @@
 #include "stone.h"
 #include "field.h"
-#include "test.h"
+#include "dump.h"
 
 
 #include<iostream>

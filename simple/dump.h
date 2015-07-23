@@ -1,5 +1,5 @@
-#ifndef TEST_H_
-#define TEST_H_
+#ifndef DUMP_H_
+#define DUMP_H_
 
 #include "stone.h"
 #include "field.h"
