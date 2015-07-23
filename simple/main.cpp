@@ -59,7 +59,20 @@ void DumpField(const Field& f) {
     puts("");
   }
 }
-
+void DumpStone(const Stone& s) {
+  for (int j = 0; j < 8; ++j) {
+    for (int k = 0; k < 8; ++k) {
+      putc(s.raw[j][k], stdout);
+    }
+    puts("");
+  }
+}
+void DumpStones() {
+  for (int i = 0; i < number_of_stone; ++i) {
+    DumpStone(reserved_stones[i]);
+    puts("");
+  }
+}
 
 void Solve(Field f, const int look_nth_stone) {
   if (look_nth_stone > number_of_stone) { //終了判定
@@ -84,17 +97,7 @@ void Solve(Field f, const int look_nth_stone) {
   }
 }
 
-void DumpStones() {
-  for (int i = 0; i < number_of_stone; ++i) {
-    for (int j = 0; j < 8; ++j) {
-      for (int k = 0; k < 8; ++k) {
-        putc(reserved_stones[i].raw[j][k], stdout);
-      }
-      puts("");
-    }
-    puts("");
-  }
-}
+
 
 void test();
 int main() {
