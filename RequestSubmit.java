@@ -1,7 +1,10 @@
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -40,6 +43,12 @@ public class RequestSubmit {
 		}catch(IOException e){
 			e.printStackTrace();
 			System.err.println("input error");
+			try {
+				bf.close();
+			} catch (IOException e1) {
+				// TODO 自動生成された catch ブロック
+				e1.printStackTrace();
+			}
 			this.interactive();
 		}
 
@@ -57,7 +66,15 @@ public class RequestSubmit {
 				this.download(query);
 				break;
 			case 2:
-				this.post(query);
+				System.out.println("送信ファイルパスを入力");
+				String path = null;
+				try {
+					path = bf.readLine();
+				} catch (IOException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				}
+				this.post(query, path);
 				break;
 			}
 		}else{
@@ -68,7 +85,8 @@ public class RequestSubmit {
 
 	public void download(String url){
 		try {
-			HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+			HttpURLConnection con =
+					(HttpURLConnection) new URL(url).openConnection();
 
 			//設定
 			//対話形式の無効化
@@ -88,8 +106,11 @@ public class RequestSubmit {
 				BufferedReader im =
 						new BufferedReader(new InputStreamReader
 								(con.getInputStream()));
-				while(im.readLine() != null){
-					System.out.println(im.readLine());
+				//1回改行
+				System.out.println();
+				String line;
+				while((line = im.readLine()) != null){
+					System.out.println(line);
 				}
 				im.close();
 			}else{//エラー
@@ -108,7 +129,57 @@ public class RequestSubmit {
 		}
 	}
 
-	public void post(String url){}
+	public void post(String url, String filename){
+		try {
+			HttpURLConnection con =
+					(HttpURLConnection) new URL(url).openConnection();
+
+			//設定
+			//対話形式の無効化
+			con.setAllowUserInteraction(false);
+			//リダイレクトには従う
+			con.setInstanceFollowRedirects(true);
+			//POSTメソッドを使用
+			con.setRequestMethod("POST");
+			//キャッシュを使用しない
+			con.setUseCaches(false);
+			//Output有効化
+			con.setDoOutput(true);
+			//ContentType
+			con.setRequestProperty("Content-Type", "text/plain");
+
+			//接続
+			con.connect();
+			//接続の確認
+			if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
+				//txtRead -> UPload
+				BufferedReader im = new BufferedReader(
+						new FileReader(filename));
+				BufferedWriter out = new BufferedWriter(
+						new OutputStreamWriter(con.getOutputStream()));
+
+				String line;
+				while((line = im.readLine()) != null){
+					out.write(line);
+					out.flush();
+				}
+				im.close();
+				out.close();
+			}else{//エラー
+				System.out.println("Error " + con.getResponseCode());
+				//さいしょにもどる
+				this.interactive();
+			}
+		}catch (MalformedURLException e) {
+			e.printStackTrace();
+			System.out.println("無効なURL");
+			this.interactive();
+		}catch (ProtocolException e) {
+			e.printStackTrace();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
 
 }
 
