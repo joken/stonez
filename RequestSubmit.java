@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -184,8 +183,25 @@ public class RequestSubmit {
 }
 
 class Main{
+	/*
+	 * URLとコマンドが引数にないと対話モード
+	 * @param args[0] URL
+	 * @param args[1] コマンド
+	 * @param args[2] POST用ファイル名
+	 * */
 	public static void main(String args[]){
 		RequestSubmit rm = new RequestSubmit();
-		rm.interactive();
+		if (args.length < 2) {
+			rm.interactive();
+		}else{
+			if(args[1].equals("1")){
+				rm.download(args[0]);
+			}else if(args[1].equals("2") && args.length == 3){
+				rm.post(args[0], args[2]);
+			}else{
+				System.err.println("Illegal arguments, exit");
+				System.exit(0);
+			}
+		}
 	}
 }
