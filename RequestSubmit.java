@@ -8,7 +8,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
+import java.util.Scanner;
 
 public class RequestSubmit {
 
@@ -21,10 +22,9 @@ public class RequestSubmit {
 		try {
 			query = bf.readLine();
 		} catch (IOException e) {
-			//はじめにもどる
 			e.printStackTrace();
 			System.err.println("input error");
-			this.interactive();
+			System.exit(0);
 		}
 
 		if(query.equals("0")){
@@ -149,31 +149,31 @@ public class RequestSubmit {
 			con.setRequestProperty("Content-Type", "text/plain");
 
 			//接続
-			con.connect();
+			//con.connect();
 
 			try{
 				//txtRead -> UPload
 				//filename = nullでstdinから吸う("end"で終了)
 				BufferedWriter out = new BufferedWriter(
 						new OutputStreamWriter(con.getOutputStream()));
-				BufferedReader im;
-				String line;
 				if (filename != null) {
-					im = new BufferedReader(new FileReader(filename));
+					String line;
+					BufferedReader im = new BufferedReader(
+							new FileReader(filename));
 					while((line = im.readLine()) != null){
 						out.write(line);
 					}
+					im.close();
 				}else{
-					im = new BufferedReader(new InputStreamReader(
-							System.in));
-					while((line = im.readLine()) == "end"){
-						out.write(line);
+					Scanner scan = new Scanner(System.in);
+					while(!scan.hasNext("end")){
+						out.write(scan.nextLine());
 					}
+					scan.close();
 				}
 
 				out.flush();
 
-				im.close();
 				out.close();
 			}catch(IOException e){
 				e.printStackTrace();
@@ -182,9 +182,10 @@ public class RequestSubmit {
 
 			//レスポンスの確認
 			if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
+				//UTF-8以外からは引数の文字列を変更(クソース)
 				InputStreamReader isr = new InputStreamReader(
 						con.getInputStream(),
-                        StandardCharsets.UTF_8);
+                        Charset.forName("UTF-8"));
 				BufferedReader reader = new BufferedReader(isr);
 				String line;
 				while ((line = reader.readLine()) != null) {
