@@ -8,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class RequestSubmit {
 
@@ -149,21 +150,47 @@ public class RequestSubmit {
 
 			//接続
 			con.connect();
-			//接続の確認
-			if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
+
+			try{
 				//txtRead -> UPload
-				BufferedReader im = new BufferedReader(
-						new FileReader(filename));
+				//filename = nullでstdinから吸う("end"で終了)
 				BufferedWriter out = new BufferedWriter(
 						new OutputStreamWriter(con.getOutputStream()));
-
+				BufferedReader im;
 				String line;
-				while((line = im.readLine()) != null){
-					out.write(line);
-					out.flush();
+				if (filename != null) {
+					im = new BufferedReader(new FileReader(filename));
+					while((line = im.readLine()) != null){
+						out.write(line);
+					}
+				}else{
+					im = new BufferedReader(new InputStreamReader(
+							System.in));
+					while((line = im.readLine()) == "end"){
+						out.write(line);
+					}
 				}
+
+				out.flush();
+
 				im.close();
 				out.close();
+			}catch(IOException e){
+				e.printStackTrace();
+				return;
+			}
+
+			//レスポンスの確認
+			if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
+				InputStreamReader isr = new InputStreamReader(
+						con.getInputStream(),
+                        StandardCharsets.UTF_8);
+				BufferedReader reader = new BufferedReader(isr);
+				String line;
+				while ((line = reader.readLine()) != null) {
+					System.out.println(line);
+					}
+				reader.close();
 			}else{//エラー
 				System.out.println("Error " + con.getResponseCode());
 				//さいしょにもどる
@@ -187,7 +214,7 @@ class Main{
 	 * URLとコマンドが引数にないと対話モード
 	 * @param args[0] URL
 	 * @param args[1] コマンド
-	 * @param args[2] POST用ファイル名
+	 * @param args[2] POST用ファイル名(nullでstdin使用)
 	 * */
 	public static void main(String args[]){
 		RequestSubmit rm = new RequestSubmit();
@@ -198,6 +225,8 @@ class Main{
 				rm.download(args[0]);
 			}else if(args[1].equals("2") && args.length == 3){
 				rm.post(args[0], args[2]);
+			}else if(args[1].equals("2") && args.length == 2){
+				rm.post(args[0], null);
 			}else{
 				System.err.println("Illegal arguments, exit");
 				System.exit(0);
