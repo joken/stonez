@@ -96,4 +96,23 @@ function util.Set(initial_set)
     return setmetatable(Set, meta)
 end
 
+function check_argument(obj, typing, method_name, order)
+    local errorLevel = (method_name == "new") and 2 or 3
+    if type(typing) == "string" then
+        if type(obj) == typing then
+            return
+        end
+        local type_got = type(obj)
+        error(
+            ("bad argument #%d to '%s' (%s expected, got %s)"):format(
+                order,
+                method_name,
+                typing,
+                type_got
+            ),
+            errorLevel
+        )
+    end
+end
+
 return util
