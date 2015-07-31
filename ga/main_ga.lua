@@ -1,5 +1,8 @@
 -- main_ga.lua
 
-ga = require "ga"
+math.randomseed(tonumber(tostring { }:match("%s(%x+)"), 16))
 
-print(ga.Gene())
+ga = require "ga"
+stonez = require "stonez"
+
+print(ga.Gene({ { }, { }, { }, { }, { }, { }, { }, }):score(stonez.Field()))
