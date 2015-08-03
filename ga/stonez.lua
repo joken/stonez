@@ -126,8 +126,11 @@ function stonez.Line(given_line)
 end
 
 -- フィールド
-function stonez.Field(raw_stone_field)
-    util.check_argument(raw_stone_field, "table", "stonez.Field", 1)
+function stonez.Field(given_filling_field, given_stone_field)
+    util.check_argument(given_filling_field, "table", "stonez.Field", 2)
+    if given_stone_field then
+        util.check_argument(given_stone_field, "table", "stonez.Field", 1)
+    end
 
     local Field = {
         class_name = "Field",
@@ -137,11 +140,11 @@ function stonez.Field(raw_stone_field)
     -- フィールド幅
     local width = 32
 
-    -- 石だけを配置するフィールド
-    local stone_field
-
     -- 石と障害物が区別されないフィールド
     local filling_field
+
+    -- 石だけを配置するフィールド
+    local stone_field
 
     -- 配置された石の数
     local count_deployed = 0
@@ -176,6 +179,7 @@ function stonez.Field(raw_stone_field)
 
         -- 石を正規化位置で配置
         stone:deploy_normalized(filling_field, position)
+        stone:deploy_normalized(stone_field, position)
 
         -- 実際の配置情報を返す
         return { }
@@ -224,7 +228,7 @@ function stonez.Field(raw_stone_field)
     -- 得点
     function Field:score()
         local score = 0
-        for _, line in pairs(stone_field) do
+        for _, line in pairs(filling_field) do
             score = score + line:count(0)
         end
         return score
@@ -237,19 +241,25 @@ function stonez.Field(raw_stone_field)
 
     -- クローン
     function Field:clone()
-        return self.class(stone_field)
+        return self.class(filling_field, stone_field)
     end
 
     --- 初期化処理 ---
 
-    stone_field = { }
-    for _, line in pairs(raw_stone_field) do
-        stone_field[#stone_field + 1] = line:clone()
+    filling_field = { }
+    for _, line in pairs(given_filling_field) do
+        filling_field[#filling_field + 1] = line:clone()
     end
 
-    filling_field = { }
-    for i = 1, width do
-        filling_field[#filling_field + 1] = stonez.Line()
+    stone_field = { }
+    if given_stone_field then
+        for _, line in pairs(given_stone_field) do
+            stone_field[#stone_field + 1] = line:clone()
+        end
+    else
+        for i = 1, width do
+            stone_field[#stone_field + 1] = stonez.Line()
+        end
     end
 
     --- メタテーブル ---
