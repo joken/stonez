@@ -36,25 +36,17 @@ function quest_parser.Parser(filename)
     end
 
     -- 生フィールドを返す
-    local function create_raw_field()
+    local function create_raw_field(block_field)
         local raw_field = { }
-        for digits in blocks[INDEX_FIELD]:gmatch "%d+" do
+        for digits in block_field:gmatch "%d+" do
             raw_field[#raw_field + 1] = create_line(digits)
         end
         return raw_field
     end
 
-    -- 石を1個返す
-    local function create_stone(block_stone)
-        util.check_argument(block_stone, "string", "create_stone", 1)
-        local stone = stonez.Stone()
-
-        return stone
-    end
-
     -- フィールドを返す
     function Parser:field()
-        return stonez.Field(create_raw_field())
+        return stonez.Field(create_raw_field(blocks[INDEX_FIELD]))
     end
 
     -- 石を返す
@@ -62,7 +54,7 @@ function quest_parser.Parser(filename)
         local stones = { }
         for index_stone = INDEX_STONE_BASE, blocks[INDEX_NUMBER_STONES] do
             local block_stone = blocks[index_stone]
-            stones[#stones + 1] = create_stone(block_stone)
+            stones[#stones + 1] = stonez.Stone(create_raw_field(block_stone))
         end
         return stones
     end

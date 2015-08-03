@@ -115,4 +115,9 @@ function util.check_argument(obj, typing, method_name, order, add_error_level)
     end
 end
 
+function util.not_implemented()
+    -- print(debug.traceback("*** Not implemented ***", 2))
+    -- print ""
+end
+
 return util

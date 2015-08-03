@@ -142,7 +142,7 @@ function ga.Gene(stones_given)
 
     --- メソッド ---
 
-    -- この遺伝子の得点
+    -- フィールドを与えて石を配置し，この遺伝子の得点を返す
     function Gene:score(field_given)
         -- 引数の型を確認
         util.check_argument(field_given, "table", "Gene:score", 1)
@@ -153,30 +153,25 @@ function ga.Gene(stones_given)
         local field = field_given:clone()
 
         -- 配置される石の遺伝子のiterator
-        local next_pair = util.Set(slots:pairs_deployed()):values()
+        local pairs_deployed = slots:pairs_deployed()
 
         -- フィールドに対してシミュレートする.
         -- 1つめ
-        local pair = next_pair()
+        local pair = pairs_deployed[1]
         -- 配置される石がない
         if pair == nil then
             return field:score(), field:count_deployed()
         end
-        -- 1つめを配置
+        -- 1つめを位置指定で配置
         field:deploy_stone(
             pair.stone,
             pair.gene_segment.manipulation,
             pair.gene_segment.position
         )
         -- 2つめ以降
-        while true do
-            pair = next_pair()
-            -- 配置される石がなくなった
-            if pair == nil then
-                -- フィールドに対する得点を求めて返す
-                return field:score(), field:count_deployed()
-            end
-            -- 配置
+        for i = 2, #pairs_deployed do
+            pair = pairs_deployed[i]
+            -- 輪郭線指定で配置
             field:deploy_stone(
                 pair.stone,
                 pair.gene_segment.manipulation,
@@ -184,6 +179,9 @@ function ga.Gene(stones_given)
                 pair.gene_segment.phase
             )
         end
+        -- 全部を配置した
+        -- フィールドに対する得点を求めて返す
+        return field:score(), field:count_deployed()
     end
 
     return Gene
