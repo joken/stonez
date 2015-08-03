@@ -96,8 +96,8 @@ function util.Set(initial_set)
     return setmetatable(Set, meta)
 end
 
-function util.check_argument(obj, typing, method_name, order)
-    local errorLevel = (method_name == "new") and 2 or 3
+function util.check_argument(obj, typing, method_name, order, add_error_level)
+    local error_level = 2 + (add_error_level or 0)
     if type(typing) == "string" then
         if type(obj) == typing then
             return
@@ -110,7 +110,7 @@ function util.check_argument(obj, typing, method_name, order)
                 typing,
                 type_got
             ),
-            errorLevel
+            error_level
         )
     end
 end

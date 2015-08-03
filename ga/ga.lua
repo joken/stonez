@@ -82,19 +82,19 @@ local function Slots(stones_given)
     --- メソッド ---
 
     -- 敷き詰められる石の個数
-    function Slots:count_located()
-        return #self:pairs_located()
+    function Slots:count_deployed()
+        return #self:pairs_deployed()
     end
 
     -- 敷き詰められる石
-    function Slots:pairs_located()
-        local pairs_located = { }
+    function Slots:pairs_deployed()
+        local pairs_deployed = { }
         for _, pair in pairs(pairs_stone_segment) do
             if pair.gene_segment.selection == 1 then
-                pairs_located[#pairs_located + 1] = pair
+                pairs_deployed[#pairs_deployed + 1] = pair
             end
         end
-        return pairs_located
+        return pairs_deployed
     end
 
     --- 初期化処理 ---
@@ -153,17 +153,17 @@ function ga.Gene(stones_given)
         local field = field_given:clone()
 
         -- 配置される石の遺伝子のiterator
-        local next_pair = util.Set(slots:pairs_located()):values()
+        local next_pair = util.Set(slots:pairs_deployed()):values()
 
         -- フィールドに対してシミュレートする.
         -- 1つめ
         local pair = next_pair()
         -- 配置される石がない
         if pair == nil then
-            return field:score()
+            return field:score(), field:count_deployed()
         end
         -- 1つめを配置
-        field:locate_stone(
+        field:deploy_stone(
             pair.stone,
             pair.gene_segment.manipulation,
             pair.gene_segment.position
@@ -173,21 +173,17 @@ function ga.Gene(stones_given)
             pair = next_pair()
             -- 配置される石がなくなった
             if pair == nil then
-                return field:score()
+                -- フィールドに対する得点を求めて返す
+                return field:score(), field:count_deployed()
             end
             -- 配置
-            field:locate_stone(
+            field:deploy_stone(
                 pair.stone,
                 pair.gene_segment.manipulation,
                 pair.gene_segment.edge,
                 pair.gene_segment.phase
             )
         end
-    end
-
-    -- この遺伝子で敷き詰めた石の個数
-    function Gene:count_located()
-        return slots:count_located()
     end
 
     return Gene
