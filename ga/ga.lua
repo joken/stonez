@@ -178,6 +178,11 @@ function ga.Gene(stones_given)
                 pair.gene_segment.edge,
                 pair.gene_segment.phase
             )
+            -- field:deploy_stone(
+            --     pair.stone,
+            --     pair.gene_segment.manipulation,
+            --     pair.gene_segment.position
+            -- )
         end
         -- 全部を配置した
         -- フィールドに対する得点を求めて返す
