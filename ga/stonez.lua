@@ -29,24 +29,32 @@ function stonez.Stone(given_raw_stone)
 
     -- 石操作済みの石を返す
     local function create_manipulated(manipulation)
-        local t = manipulation & 0x4
-        local r180 = manipulation & 0x2
-        local r90 = manipulation & 0x1
+        local t = (manipulation & 0x4) >> 2
+        local r180 = (manipulation & 0x2) >> 1
+        local r90 = (manipulation & 0x1) >> 0
         local rev_x = t ~ r180 == 1
         local rev_y = r180 ~ r90 == 1
         local rev_xy = r90 == 1
-        local manipulated = 
-        for i = 1, width do
-            local x = rev_x and width - i + 1 or i
-            for j = 1, width do
-                local y = rev_y and width - j + 1 or j
-                manipulated[#manipulated + 1] = 
+        local manipulated = { }
+        print(manipulation, t, r180, r90, rev_x, rev_y, rev_xy)
+        for j = 1, width do
+            local y = rev_y and width - j + 1 or j
+            manipulated[j] = stonez.Line()
+            for i = 1, width do
+                local x = rev_x and width - i + 1 or i
+                if rev_xy then
+                    x, y = y, x
+                end
+                if raw_stone[y][x] == 1 then
+                    io.write "[]"
+                    manipulated[j]:set(i)
+                else
+                    io.write ". "
+                end
             end
+            print ""
         end
-
-
-        
-
+        return stonez.Stone(manipulated)
     end
 
     -- 生フィールドに対して正規化位置で配置する
