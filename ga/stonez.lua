@@ -56,13 +56,13 @@ function stonez.Stone(given_raw_stone)
         local sign_x = not r180 and (t or r90) or not t and r180 and not r90
         local sign_y = r180 and (not t or not r90) or t and not r180 and r90
         local manipulated = { }
-        print(manipulation, t, r180, r90)
-        print(("%s%s %s%s"):format(
-            sign_x and "-" or "+",
-            sel_x and "x" or "y",
-            sign_y and "-" or "+",
-            sel_y and "x" or "y"
-        ))
+        -- print(manipulation, t, r180, r90)
+        -- print(("%s%s %s%s"):format(
+        --     sign_x and "-" or "+",
+        --     sel_x and "x" or "y",
+        --     sign_y and "-" or "+",
+        --     sel_y and "x" or "y"
+        -- ))
         for j = 1, width do
             manipulated[j] = stonez.Line()
             for i = 1, width do
@@ -87,7 +87,7 @@ function stonez.Stone(given_raw_stone)
         local manipulated = create_manipulated(manipulation)
         local normalized_base = normalized_base(manipulated)
 
-        print(normalized_base.x, normalized_base.y)
+        -- print(normalized_base.x, normalized_base.y)
         print(stonez.Stone(manipulated))
 
         for j = 1, width - normalized_base.y + 1 do
@@ -98,9 +98,9 @@ function stonez.Stone(given_raw_stone)
                 local field_y = j + position.y - 1
                 if manipulated[stone_y][stone_x] == 1 then
                     raw_field[field_y]:set(field_x)
-                    io.write ">>>"
+                    -- io.write ">>>"
                 end
-                print("", stone_x, stone_y, field_x, field_y, i, j, position.x, position.y)
+                -- print("", stone_x, stone_y, field_x, field_y, i, j, position.x, position.y)
             end
         end
 
@@ -349,7 +349,7 @@ function stonez.Field(given_filling_field, given_stone_field)
                 y = position_edge.y + v.y,
             }
             if stone_field[position.y][position.x] == 1 then
-                return position, inverse(dir)
+                return position, (dir + 1 - 1) % 8 + 1
             end
         end
         for dir = 1, inverse(direction) do
@@ -359,7 +359,7 @@ function stonez.Field(given_filling_field, given_stone_field)
                 y = position_edge.y + v.y,
             }
             if stone_field[position.y][position.x] == 1 then
-                return position, inverse(dir)
+                return position, (dir + 1 - 1) % 8 + 1
             end
         end
     end
@@ -368,14 +368,37 @@ function stonez.Field(given_filling_field, given_stone_field)
     local function trace_contour(edge_position)
         util.check_argument(edge_position, "number", "trace_contour", 1)
 
+        -- 1マス外側を輪郭とする
+        -- 追跡がうまくいっていない
+        -- たぶん next_edge の返す position を変えるべき（現状 direction だけ変えている）
+
+        -- デバッグ用に輪郭を出力
+        field = { }
+        for i = 1, width do
+            field[#field + 1] = stonez.Line()
+        end
+
+
         -- 位置と方向の初期値
         local position_edge = raster_top_left()
         local direction = 1
 
+        -- 初期位置修正
+        position_edge.y = position_edge.y - 1
+
+        -- デバッグ用に輪郭を出力
+        field[position_edge.y]:set(position_edge.x)
+
         for i = 1, edge_position do
             -- 次の輪郭素片を探す
-            local position_edge, direction = next_edge(position_edge, direction)
+            -- print(position_edge.x, position_edge.y, direction)
+            position_edge, direction = next_edge(position_edge, direction)
+            
+            -- デバッグ用に輪郭を出力
+            field[position_edge.y]:set(position_edge.x)
         end
+
+        print(stonez.Field(field))
 
         -- メモ edge_position のモジュロをとって高速化
 
