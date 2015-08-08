@@ -2,7 +2,9 @@
 #define FIELD_H_
 
 #include "stone.h"
+#include "point.h"
 #include <array>
+#include <set>
 
 /*
  * フィールド
