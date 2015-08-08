@@ -1,7 +1,10 @@
 #include "field.h"
 #include "stone.h"
+#include "point.h"
 
-bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_info) {
+#include <set>
+
+bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_info, std::set<Point>* next_candidates) {
   int dx[] = {-1, 0, 0, 1}, // 隣接判定の上下左右
       dy[] = {0, -1, 1, 0};
   // 書き換えるので、もどせるようにしておく
@@ -25,10 +28,13 @@ bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_inf
           score = backup_score;
           return false;
         }
-        if (! exist_neighbor) { //隣接判定
+        if (! exist_neighbor) { //隣接判定 と、候補のピックアップやります
           for (int i = 0; i < 4; ++i) {
             if (y + base_y + dy[i] < 0 || y + base_y + dy[i] >= 32 || x + base_x + dx[i] < 0 || x + base_x + dx[i] >= 32) { //範囲チェック
               continue;
+            }
+            if (raw[y + base_y + dy[i]][x + base_x + dx[i]] == '0') {
+              next_candidates->insert(Point(y + base_y + dy[i], x + base_x + dx[i]));
             }
             if (raw[y + base_y + dy[i]][x + base_x + dx[i]] == '2') {
               exist_neighbor = true;
