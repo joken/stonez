@@ -15,7 +15,6 @@ bool Field::TryPutStone(Stone& stone, int base_x, int base_y, int manipulate_inf
   // score = 0なら隣接判定しない
   bool exist_neighbor = (score == 0);
 
-
   // 石が置けるか判定する
   for (int x = 0; x < 8; ++x) {
     for (int y = 0; y < 8; ++y) {

@@ -20,7 +20,7 @@ class Field {
     int Score() const {
       return score;
     }
-    bool TryPutStone(Stone& s, int base_x, int base_y, int manipulate_info); //石を置いてみる処理
+    bool TryPutStone(Stone& s, int base_x, int base_y, int manipulate_info, std::set<Point>* next_candidates); //石を置いてみる処理
 };
 
 #endif
