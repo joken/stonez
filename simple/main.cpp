@@ -2,8 +2,10 @@
 #include "field.h"
 #include "dump.h"
 #include "input.h"
+#include "point.h"
 
 #include <iostream>
+#include <set>
 
 int number_of_stone = 0;
 Stone reserved_stones[256];
@@ -16,7 +18,7 @@ void DumpStones() {
   }
 }
 
-void Solve(Field f, Field& max_score_field, const int look_nth_stone) {
+void Solve(Field f, Field& max_score_field, const int look_nth_stone, std::set<Point>& candidate_points) {
   if (look_nth_stone > number_of_stone) { // 最後の石まで行ったら
     if (f.Score() > max_score_field.Score()) { // より良いフィールドなら更新
       max_score_field = f;
@@ -24,17 +26,18 @@ void Solve(Field f, Field& max_score_field, const int look_nth_stone) {
       return;
   }
 
-  Solve(f, max_score_field, look_nth_stone + 1); // 石を置かない場合
+  Solve(f, max_score_field, look_nth_stone + 1, candidate_points); // 石を置かない場合
   Field backup = f;
 
-  for (int x = -7; x < 32; ++x) {  // フィールドの全部の場所に
-    for (int y = -7; y < 32; ++y) {
-      for (int i = 0; i < 8; ++i) { // あらゆる向きで
-        if (f.TryPutStone(reserved_stones[look_nth_stone], x, y, i)) { //置いてみておけたら
-          // 出力処理をここに書く
-          Solve(f, max_score_field, look_nth_stone+1); // 置いた状態で次の石を探す
-          f = backup;
-        }
+  for (std::set<Point>::iterator it = candidate_points.begin(); it != candidate_points.end(); ++it) {
+    for (int i = 0; i < 8; ++i) { // あらゆる向きで
+      std::set<Point> next_candidates; // itの位置に置いた時、新しく候補となる位置
+      if (f.TryPutStone(reserved_stones[look_nth_stone], it->x, it->y, i, &next_candidates)) { //置いてみておけたら
+        next_candidates.insert(candidate_points.begin(), candidate_points.end()); // next_candidatesにcandidate_pointsをmerge
+        next_candidates.erase(*it); // itの位置はもう置いたので削除する
+        // 出力処理をここに書く
+        Solve(f, max_score_field, look_nth_stone+1, next_candidates); // 置いた状態で次の石を探す
+        f = backup;
       }
     }
   }
@@ -42,6 +45,7 @@ void Solve(Field f, Field& max_score_field, const int look_nth_stone) {
 
 int main() {
   Field reserved_field;
+  std::set<Point> candidate_points;
   // get_problemfile();
   number_of_stone = Parse(&reserved_field, reserved_stones);
   Solve(reserved_field, max_score_field, 0);
