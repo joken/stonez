@@ -94,8 +94,12 @@ function quest_parser.Parser(filename)
     local meta = { }
 
     function meta:__tostring()
-        -- TODO Auto-generated method stub
-        return "[Parser]"
+        local s = "[Parser]\n"
+        for _, block in ipairs(blocks) do
+            s = s .. block .. "\n"
+            s = s .. "----------\n"
+        end
+        return s
     end
 
     return setmetatable(Parser, meta)
