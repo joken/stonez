@@ -9,7 +9,7 @@ function stonez.Stone(given_raw_stone)
     end
 
     local Stone = {
-        class_name = "Stone",
+        class_name = "stonez.Stone",
         class = stonez.Stone,
     }
 
@@ -48,14 +48,14 @@ function stonez.Stone(given_raw_stone)
             for i = 1, 8 do
                 local ntz = target_stone[i]:ntz()
                 if ntz ~= 32 then
-                    print(i - 1, 31 - ntz)
+                    -- util.print(i - 1, 31 - ntz)
                     list_ntz[#list_ntz + 1] = {
                         x = 31 - ntz, 
                         y = i - 1,
                     }
                 end
             end 
-            print(("(%2X, %2X)"):format(list_ntz[phase % #list_ntz + 1].x, list_ntz[phase % #list_ntz + 1].y), "<<<<< 5 5 5 5 5")
+            -- util.print(("(%2X, %2X)"):format(list_ntz[phase % #list_ntz + 1].x, list_ntz[phase % #list_ntz + 1].y), "<<<<< 5 5 5 5 5")
             delta.x = delta.x - list_ntz[phase % #list_ntz + 1].x
             delta.y = delta.y - list_ntz[phase % #list_ntz + 1].y
         end
@@ -66,14 +66,14 @@ function stonez.Stone(given_raw_stone)
             for i = 1, 8 do
                 local nlz = target_stone[i]:nlz()
                 if nlz ~= 32 then
-                    print(i - 1, nlz)
+                    -- util.print(i - 1, nlz)
                     list_nlz[#list_nlz + 1] = {
                         x = nlz, 
                         y = i - 1,
                     }
                 end
             end
-            print(("(%2X, %2X)"):format(list_nlz[phase % #list_nlz + 1].x, list_nlz[phase % #list_nlz + 1].y), "<<<<< 1 1 1 1 1")
+            -- util.print(("(%2X, %2X)"):format(list_nlz[phase % #list_nlz + 1].x, list_nlz[phase % #list_nlz + 1].y), "<<<<< 1 1 1 1 1")
             delta.x = delta.x - list_nlz[phase % #list_nlz + 1].x
             delta.y = delta.y - list_nlz[phase % #list_nlz + 1].y
         end
@@ -90,14 +90,14 @@ function stonez.Stone(given_raw_stone)
                     end
                 end
                 if ntz ~= 32 then
-                    print(i - 1, 31 - ntz)
+                    -- util.print(i - 1, 31 - ntz)
                     list_ntz[#list_ntz + 1] = {
                         x = i - 1,
                         y = 31 - ntz, 
                     }
                 end
             end 
-            print(("(%2X, %2X)"):format(list_ntz[phase % #list_ntz + 1].x, list_ntz[phase % #list_ntz + 1].y), "<<<<< 7 7 7 7 7")
+            -- util.print(("(%2X, %2X)"):format(list_ntz[phase % #list_ntz + 1].x, list_ntz[phase % #list_ntz + 1].y), "<<<<< 7 7 7 7 7")
             delta.x = delta.x - list_ntz[phase % #list_ntz + 1].x
             delta.y = delta.y - list_ntz[phase % #list_ntz + 1].y
         end
@@ -114,14 +114,14 @@ function stonez.Stone(given_raw_stone)
                     end
                 end
                 if nlz ~= 32 then
-                    print(i - 1, nlz)
+                    -- util.print(i - 1, nlz)
                     list_nlz[#list_nlz + 1] = {
                         x = i - 1,
                         y = nlz, 
                     }
                 end
             end
-            print(("(%2X, %2X)"):format(list_nlz[phase % #list_nlz + 1].x, list_nlz[phase % #list_nlz + 1].y), "<<<<< 3 3 3 3 3")
+            -- util.print(("(%2X, %2X)"):format(list_nlz[phase % #list_nlz + 1].x, list_nlz[phase % #list_nlz + 1].y), "<<<<< 3 3 3 3 3")
             delta.x = delta.x - list_nlz[phase % #list_nlz + 1].x
             delta.y = delta.y - list_nlz[phase % #list_nlz + 1].y
         end
@@ -130,8 +130,8 @@ function stonez.Stone(given_raw_stone)
             x = contur.position.x + delta.x,
             y = contur.position.y + delta.y,
         }
-        print(("(%2X, %2X)"):format(contur.position.x, contur.position.y))
-        print(("(%2X, %2X)"):format(position.x, position.y))
+        -- util.print(("(%2X, %2X)"):format(contur.position.x, contur.position.y))
+        -- util.print(("(%2X, %2X)"):format(position.x, position.y))
 
         return position
         -- return contur.position
@@ -147,8 +147,8 @@ function stonez.Stone(given_raw_stone)
         local sign_x = not r180 and (t or r90) or not t and r180 and not r90
         local sign_y = r180 and (not t or not r90) or t and not r180 and r90
         local manipulated = { }
-        -- print(manipulation, t, r180, r90)
-        -- print(("%s%s %s%s"):format(
+        -- util.print(manipulation, t, r180, r90)
+        -- util.print(("%s%s %s%s"):format(
         --     sign_x and "-" or "+",
         --     sel_x and "x" or "y",
         --     sign_y and "-" or "+",
@@ -171,7 +171,7 @@ function stonez.Stone(given_raw_stone)
 
     -- 与えられた位置で配置する
     function deploy(raw_field, target_stone, position, base)
-        util.check_argument(raw_field, "table", "deployd", 1)
+        util.check_argument(raw_field, "table", "deploy", 1)
         util.check_argument(target_stone, "table", "deploy", 2)
         util.check_argument(position, "table", "deploy", 3)
         if base then
@@ -183,19 +183,37 @@ function stonez.Stone(given_raw_stone)
             y = 1,
         }
 
-        print(stonez.Stone(target_stone))
+        util.print(stonez.Stone(target_stone))
 
+        -- おけるか確認
         for j = 1, width - base.y + 1 do
+            local stone_y = j + base.y - 1
+            local field_y = j + position.y - 1
             for i = 1, width - base.x + 1 do
                 local stone_x = i + base.x - 1
-                local stone_y = j + base.y - 1
                 local field_x = i + position.x - 1
-                local field_y = j + position.y - 1
+                if raw_field[field_y] == nil then
+                    return false
+                end
+                if target_stone[stone_y][stone_x] == 1
+                    and not (raw_field[field_y][field_x] == 0) then
+                    return false
+                end
+            end
+        end
+        -- 置く
+        for j = 1, width - base.y + 1 do
+            local stone_y = j + base.y - 1
+            local field_y = j + position.y - 1
+            for i = 1, width - base.x + 1 do
+                local stone_x = i + base.x - 1
+                local field_x = i + position.x - 1
                 if target_stone[stone_y][stone_x] == 1 then
                     raw_field[field_y]:set(field_x)
                 end
             end
         end
+        return true
     end
 
     -- 生フィールドに対して正規化位置で配置する
@@ -206,9 +224,9 @@ function stonez.Stone(given_raw_stone)
 
         local manipulated = create_manipulated(manipulation)
         local normalized_base = normalized_base(manipulated)
-        print(("(%2X, %2X)"):format(position.x, position.y))
+        -- util.print(("(%2X, %2X)"):format(position.x, position.y))
 
-        deploy(raw_field, manipulated, position, normalized_base)
+        return deploy(raw_field, manipulated, position, normalized_base)
     end
 
     -- 生フィールドに対して輪郭素片と位相で配置
@@ -223,7 +241,7 @@ function stonez.Stone(given_raw_stone)
         local position = decode_phase(manipulated, contur, phase)
 
         -- 配置
-        deploy(raw_field, manipulated, position)
+        return deploy(raw_field, manipulated, position)
     end
 
     -- 空の生の石を作る
@@ -268,7 +286,7 @@ function stonez.Line(given_line)
     end
 
     local Line = {
-        class_name = "Line",
+        class_name = "stonez.Line",
         class = stonez.Line,
     }
 
@@ -287,9 +305,11 @@ function stonez.Line(given_line)
 
     -- key の位置をセット
     function Line:set(key)
-        if is_valid(key) then
+        if is_valid(key) and self[key] == 0 then
             raw_line = raw_line | (0x00000001 << (width - key))
+            return true
         end
+        return false
     end
 
     -- key の位置をリセット
@@ -328,25 +348,40 @@ function stonez.Line(given_line)
     end
 
     -- ビット列の左側から見て0が連続している数を返す
-    function Line:nlz()
-        local x = raw_line
-        x = x | ( x >>  1 );
-        x = x | ( x >>  2 );
-        x = x | ( x >>  4 );
-        x = x | ( x >>  8 );
-        x = x | ( x >> 16 );
-        return count_1( ~x );
+    function Line:nlz(given_raw_line)
+        local x = given_raw_line or raw_line
+        x = x | (x >>  1)
+        x = x | (x >>  2)
+        x = x | (x >>  4)
+        x = x | (x >>  8)
+        x = x | (x >> 16)
+        return count_1(~ x)
     end
 
     -- ビット列の右側から見て0が連続している数を返す
-    function Line:ntz()
-        local x = raw_line
+    function Line:ntz(given_raw_line)
+        local x = given_raw_line or raw_line
         return count_1((x & (- x)) - 1) 
+    end
+
+    -- ビット列の左側から見て1が連続している数を返す
+    function Line:nlo()
+        return self:nlz(~ raw_line & 0xFFFFFFFF)
+    end
+
+    -- ビット列の右側から見て1が連続している数を返す
+    function Line:nto()
+        return self:ntz(~ raw_line)
     end
 
     -- 複製を返す
     function Line:clone()
         return stonez.Line(raw_line)
+    end
+
+    -- 空か調べる
+    function Line:is_empty()
+        return raw_line == 0xFFFFFFFF
     end
 
     -- バイナリ表現を返す
@@ -392,7 +427,7 @@ function stonez.Field(given_filling_field, given_stone_field)
     end
 
     local Field = {
-        class_name = "Field",
+        class_name = "stonez.Field",
         class = stonez.Field,
     }
 
@@ -419,6 +454,46 @@ function stonez.Field(given_filling_field, given_stone_field)
             end
         end
         error("The method call is invalid for this field's current state.", 2)
+    end
+
+    -- 各lineのnloの最小値
+    local function min_nlo()
+        local min_nlo = width
+        for _, line in ipairs(filling_field) do
+            if not line:is_empty() then
+                min_nlo = math.min(line:nlo(), min_nlo)
+            end
+        end
+        return min_nlo
+    end
+
+    -- 各lineのntoの最小値
+    local function min_nto()
+        local min_nto = width
+        for _, line in ipairs(filling_field) do
+            if not line:is_empty() then
+                min_nto = math.min(line:nto(), min_nto)
+            end
+        end
+        return min_nto
+    end
+
+    -- 空のlineの個数(上側)
+    local function count_empty_line_top()
+        local y = 1
+        while filling_field[y]:is_empty() do
+            y = y + 1
+        end
+        return y - 1
+    end
+
+    -- 空のlineの個数(下側)
+    local function count_empty_line_bottom()
+        local y = width
+        while filling_field[y]:is_empty() do
+            y = y - 1
+        end
+        return width - y
     end
 
     -- 方向値を正規化する
@@ -474,34 +549,20 @@ function stonez.Field(given_filling_field, given_stone_field)
         util.check_argument(position_edge, "table", "next_contour", 1)
         util.check_argument(direction, "number", "next_contour", 2)
 
-        local debug_sw = false
-
-        if debug_sw then
-            io.write(("(%2X, %2X) "):format(position_edge.x, position_edge.y))
-            io.write(direction .. "-> ")
-        end
-
         for dir = direction, direction + 8 do
             dir = normalize_direction(inverse(dir) + 1)
-
-            if debug_sw then
-                io.write(dir .. " ")
-            end
 
             local v = vector(dir)
             local position = {
                 x = position_edge.x + v.x,
                 y = position_edge.y + v.y,
             }
-            if stone_field[position.y][position.x] == 1 then
-                
-                if debug_sw then
-                    print((" (%2X, %2X) "):format(position.x, position.y))
-                end
-
+            if stone_field[position.y] and
+                stone_field[position.y][position.x] == 1 then
                 return position, dir
             end
         end
+        return position_edge, inverse(direction)
     end
 
     -- 輪郭追跡で輪郭線指定を位置に変換
@@ -519,14 +580,8 @@ function stonez.Field(given_filling_field, given_stone_field)
         local position_edge = raster_top_left()
         -- x 方向
         local direction = 5
-        -- 着目している輪郭素片
-        local contur = {
-            position = {
-                x = position_edge.x,
-                y = position_edge.y - 1,
-            },
-            direction = vector(7),
-        }
+
+        local history = {  }
 
         local i = 1
         while true do
@@ -537,7 +592,9 @@ function stonez.Field(given_filling_field, given_stone_field)
                     x = position_edge.x + delta.x,
                     y = position_edge.y + delta.y,
                 }
-                if stone_field[neighbor.y][neighbor.x] == 0 then
+
+                if stone_field[neighbor.y] and
+                    stone_field[neighbor.y][neighbor.x] == 0 then
 
                     -- デバッグ用に輪郭を出力 --
                     -- field[neighbor.y]:set(neighbor.x)
@@ -546,7 +603,7 @@ function stonez.Field(given_filling_field, given_stone_field)
                     if i == edge_position then
 
                         -- デバッグ用に輪郭を出力 --
-                        -- print(stonez.Field(field))    
+                        -- util.print(stonez.Field(field))    
                         -- デバッグ用に輪郭を出力 --
 
                         return {
@@ -563,39 +620,64 @@ function stonez.Field(given_filling_field, given_stone_field)
             -- 次の輪郭素片を探す
             position_edge, direction = next_contour(position_edge, direction)
         end
-
-
+ 
         -- メモ edge_position のモジュロをとって高速化
 
         return 
     end
 
     -- 石を位置指定で配置
-    local function deploy_stone_freely(stone, manipulation, position)
+    local function deploy_stone_freely(stone, manipulation, raw_position)
         util.check_argument(stone, "table", "deploy_stone", 1, 2)
         util.check_argument(manipulation, "number", "deploy_stone", 2, 2)
-        util.check_argument(position, "number", "deploy_stone", 3, 2)
+        util.check_argument(raw_position, "number", "deploy_stone", 3, 2)
 
-        print(("%s: %s"):format("stone", stone))
-        print(("%s: %s"):format("manipulation", manipulation))
-        print(("%s: %s\n"):format("position", position))
+        util.print(("%s: %s"):format("stone", stone))
+        util.print(("%s: %s"):format("manipulation", manipulation))
+        util.print(("%s: %s\n"):format("position", raw_position))
+
+        -- 配置範囲の限界を矩形で求める
+        local limit = {
+            x = {
+                min = min_nlo() + 1,
+                max = width - min_nto(),
+            },
+            y = {
+                min = count_empty_line_top() + 1,
+                max = width - count_empty_line_bottom(),
+            },
+        }
+
+        local range_width_x = limit.x.max - limit.x.min + 1
+        local range_width_y = limit.y.max - limit.y.min + 1
+
+        local raw_normalized = raw_position % (range_width_x * range_width_y)
 
         -- 位置の変換
         local position = {
-            x = position % width,
-            y = position % (width * width) // width,
+            x = raw_position % range_width_x + limit.x.min,
+            y = raw_normalized // range_width_x + limit.y.min,
         }
 
         -- 石を正規化位置で配置
-        stone:deploy_normalized(filling_field, manipulation, position)
+        local success = stone:deploy_normalized(
+            filling_field,
+            manipulation,
+            position
+        )
         stone:deploy_normalized(stone_field, manipulation, position)
 
-        print(Field)
+        util.print(Field)
+        util.print(("(%2X, %2X)"):format(position.x, position.y))
+
+        if success then
+            count_deployed = count_deployed + 1
+        end
+
 
         util.not_implemented()
-
         -- 実際の配置情報を返す
-        return { }
+        return success, { }
     end
 
     -- 石を輪郭線指定で配置
@@ -605,25 +687,34 @@ function stonez.Field(given_filling_field, given_stone_field)
         util.check_argument(edge, "number", "deploy_stone", 3, 2)
         util.check_argument(phase, "number", "deploy_stone", 4, 2)
 
-        print(("%s: %s"):format("stone", stone))
-        print(("%s: %s"):format("manipulation", manipulation))
-        print(("%s: %s"):format("edge", edge))
-        print(("%s: %s\n"):format("phase", phase))
+        util.print(("%s: %s"):format("stone", stone))
+        util.print(("%s: %s"):format("manipulation", manipulation))
+        util.print(("%s: %s"):format("edge", edge))
+        util.print(("%s: %s\n"):format("phase", phase))
 
         -- 輪郭素片デコード
         local contur = trace_contour(edge)
 
         -- 石を輪郭素片と位相で配置
-        stone:deploy_edge(filling_field, manipulation, contur, phase)
+        local success = stone:deploy_edge(
+            filling_field,
+            manipulation,
+            contur,
+            phase
+        )
         stone:deploy_edge(stone_field, manipulation, contur, phase)
 
-        print(Field)
+        util.print(Field)
 
-        -- 実際の配置情報を返す
+
+        if success then
+            count_deployed = count_deployed + 1
+        end
+
 
         util.not_implemented()
-
-        return { }
+        -- 実際の配置情報を返す
+        return success, { }
     end
 
     -- 石を配置
@@ -689,14 +780,15 @@ function stonez.Field(given_filling_field, given_stone_field)
 
     function meta:__tostring()
         local s = "[Field]\n"
-        s = s .. "  "
+        s = s .. "   "
         for x = 1, width do
             s = s .. ("%2X"):format(x)
         end
         s = s .. "\n"
         for y, line in ipairs(filling_field) do
             s = s .. ("%2X "):format(y)
-            s = s .. line:binary_string(width, ". ", "[]") .. "\n"
+            s = s .. line:binary_string(width, ". ", "[]")
+            s = s .. "\n"
         end
         return s
     end

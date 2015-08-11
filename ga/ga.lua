@@ -1,18 +1,24 @@
 -- ga.lua
 
 util = require "util"
+stonez = require "stonez"
 
 local ga = { }
 
 -- 石の遺伝子
-local function GeneSegment()
+local function GeneSegment(given_raw_gene)
+    if given_raw_gene then
+        util.check_argument(given_raw_gene, "number", "GeneSegment", 1)
+    end
+
     local GeneSegment = {
         class_name = "GeneSegment",
         class = GeneSegment,
     }
     
     -- 生の値
-    local raw_gene = (math.random(0x200) - 1) + ((math.random(0x200) - 1) << 9)
+    local raw_gene = given_raw_gene or 
+        (math.random(0x200) - 1) + ((math.random(0x200) - 1) << 9)
 
     -- 生の値の意味づけ
     local properties = {
@@ -24,6 +30,11 @@ local function GeneSegment()
     }
 
     --- メソッド ---
+
+    -- 交叉
+    function GeneSegment:crossover()
+
+    end
 
     -- 全プロパティの文字列表現
     function GeneSegment:dump_properties()
@@ -41,6 +52,11 @@ local function GeneSegment()
             s = ((raw_gene >> i) & 1) .. s
         end
         return s
+    end
+
+    -- 複製
+    function GeneSegment:clone()
+        return self.class(raw_gene)
     end
 
     --- メタテーブル ---
@@ -67,9 +83,10 @@ local function GeneSegment()
 end
 
 -- 複数の石と遺伝子を紐付けするところ
-local function Slots(stones_given)
-    -- 引数の型を確認
-    util.check_argument(stones_given, "table", "Slots", 1)
+-- 引数は，Stone の配列か ペアの配列
+local function Slots( ... )
+    local args = { ... }
+    util.check_argument(args[1], "table", "Slots", 1)
 
     local Slots = {
         class_name = "Slots",
@@ -77,9 +94,61 @@ local function Slots(stones_given)
     }
 
     -- 実際の配列
-    local pairs_stone_segment = { }
+    local pairs_stone_segment
+
+    --- 初期化処理 ---
+
+    if args[1][1] and args[1][1].class_name == "stonez.Stone" then
+        -- 遺伝子を生成
+        pairs_stone_segment = { }
+        for _, stone in pairs(args[1]) do
+            pairs_stone_segment[#pairs_stone_segment + 1] = {
+                stone = stone,
+                gene_segment = GeneSegment(),
+            }
+        end
+    else
+        -- セグメントから Slots を生成
+        pairs_stone_segment = args[1]
+    end
 
     --- メソッド ---
+
+    -- 交叉
+    local function crossover_slots(given_slots)
+        return given_slots:crossover(pairs_stone_segment)
+    end
+
+    -- 交叉
+    local function crossover_pairs(given_pairs)
+        local new_pairs = { }
+
+        -- 複製
+        for _, pair in pairs(pairs_stone_segment) do
+            new_pairs[#new_pairs + 1] = {
+                stone = pair.stone,
+                gene_segment = pair.gene_segment:clone(),
+            }
+        end
+
+        -- 交叉
+        for key, pair in pairs(pairs_stone_segment) do
+            pair.gene_segment:crossover(given_pairs[key])
+        end
+
+        return Slots.class(new_pairs)
+    end
+
+    -- 交叉
+    -- 引数は交叉するお相手の Slot か ペアの集合
+    function Slots:crossover( ... )
+        local args = { ... }
+        util.check_argument(args[1], "table", "Slots:crossover", 1)
+        if args[1].class_name == "Slots" then
+            return crossover_slots(args[1])
+        end
+        return crossover_pairs(args[1])
+    end
 
     -- 敷き詰められる石の個数
     function Slots:count_deployed()
@@ -97,30 +166,22 @@ local function Slots(stones_given)
         return pairs_deployed
     end
 
-    --- 初期化処理 ---
-
-    -- 遺伝子を生成
-    for _, stone in pairs(stones_given) do
-        pairs_stone_segment[#pairs_stone_segment + 1] = {
-            stone = stone,
-            gene_segment = GeneSegment(),
-        }
-    end
-
     --- メタテーブル ---
 
     local meta = { }
 
     function meta:__index(key)
-        if type(key) == "number" and (key > 0 and key <= number_slots) then
+        util.check_argument(key, "number", "meta:__index", 1)
+        if key > 0 and key <= #pairs_stone_segment then
             return pairs_stone_segment[key]
         end
     end
 
     function meta:__tostring()
-        local s = ("[%s] %d\n"):format(self.class_name, number_slots)
+        local s = ("[%s] %d\n"):format(self.class_name, #pairs_stone_segment)
         for index, pair in ipairs(pairs_stone_segment) do
-            s = s .. ("%d:\n%s\n"):format(index, tostring(pair.gene_segment))
+            -- s = s .. ("%d:\n%s\n"):format(index, tostring(pair.gene_segment))
+            s = s .. pair.gene_segment:dump_raw() .. "\n"
         end
         return s
     end
@@ -129,30 +190,65 @@ local function Slots(stones_given)
 end
 
 -- 解の遺伝子
-function ga.Gene(stones_given)
-    util.check_argument(stones_given, "table", "ge.Gene", 1)
+-- 引数: 石のテーブルか Slot
+function ga.Gene( ... )
+    local args = { ... }
+    util.check_argument(args[1], "table", "ga.Gene", 1)
 
     local Gene = {
-        class_name = "Gene",
+        class_name = "ga.Gene",
         clsss = ga.Gene,
     }
 
     -- 石の遺伝子
-    local slots = Slots(stones_given)
+    local slots = args[1].class_name == "Slots" and args[1] or Slots(args[1])
 
     --- メソッド ---
 
+    -- 突然変異
+    function Gene:mutate()
+        return self
+    end
+
+    -- 交叉
+    local function crossover_gene(given_gene)
+        return given_gene:crossover(slots)
+    end
+
+    -- 交叉
+    local function crossover_slots(given_slots)
+        return ga.Gene(slots:crossover(given_slots))
+    end
+
+    -- 交叉
+    -- 引数は交叉するお相手の Gene か Slot
+    function Gene:crossover( ... )
+        local args = { ... }
+        util.check_argument(args[1], "table", "Gene:crossover", 1)
+        if args[1].class_name == "ga.Gene" then
+            return crossover_gene(args[1])
+        end
+        if args[1].class_name == "Slots" then
+            return crossover_slots(args[1])
+        end
+        print(args[1].class, ga.Gene)
+        error (("bad argument to '%s'"):format("Gene:crossover"), 2)
+    end
+
     -- フィールドを与えて石を配置し，この遺伝子の得点を返す
-    function Gene:score(field_given)
+    function Gene:score(given_field)
         -- 引数の型を確認
-        util.check_argument(field_given, "table", "Gene:score", 1)
+        util.check_argument(given_field, "table", "Gene:score", 1)
 
         -- フィールドを複製する
-        -- local field = field_given.class(field_given)
-        -- local field = field_given:class()
-        local field = field_given:clone()
+        -- local field = given_field.class(given_field)
+        -- local field = given_field:class()
+        local field = given_field:clone()
 
         -- 配置される石の遺伝子のiterator
+        if slots.pairs_deployed == nil then
+            print(slots[1])
+        end
         local pairs_deployed = slots:pairs_deployed()
 
         -- フィールドに対してシミュレートする.
@@ -163,33 +259,44 @@ function ga.Gene(stones_given)
             return field:score(), field:count_deployed()
         end
         -- 1つめを位置指定で配置
-        field:deploy_stone(
+        local success = field:deploy_stone(
             pair.stone,
             pair.gene_segment.manipulation,
             pair.gene_segment.position
         )
+        -- 配置できなかった
+        if not success then
+            return field:score(), field:count_deployed()
+        end
         -- 2つめ以降
         for i = 2, #pairs_deployed do
             pair = pairs_deployed[i]
             -- 輪郭線指定で配置
-            field:deploy_stone(
+            local success = field:deploy_stone(
                 pair.stone,
                 pair.gene_segment.manipulation,
                 pair.gene_segment.edge,
                 pair.gene_segment.phase
             )
-            -- field:deploy_stone(
-            --     pair.stone,
-            --     pair.gene_segment.manipulation,
-            --     pair.gene_segment.position
-            -- )
+            -- 途中で配置できなくなった
+            if not success then
+                return field:score(), field:count_deployed()
+            end
         end
         -- 全部を配置した
         -- フィールドに対する得点を求めて返す
         return field:score(), field:count_deployed()
     end
 
-    return Gene
+    -- メタテーブル --
+
+    local meta = { }
+
+    function meta:__tostring()
+        return tostring(slots)
+    end
+
+    return setmetatable(Gene, meta)
 end
 
 return ga

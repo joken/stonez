@@ -2,6 +2,8 @@
 
 local util = { }
 
+local debug = true
+
 -- 重複のないハッシュ集合
 function util.Set(initial_set)
     local Set = {
@@ -97,7 +99,7 @@ function util.Set(initial_set)
 end
 
 function util.check_argument(obj, typing, method_name, order, add_error_level)
-    local error_level = 2 + (add_error_level or 0)
+    local error_level = 3 + (add_error_level or 0)
     if type(typing) == "string" then
         if type(obj) == typing then
             return
@@ -118,6 +120,18 @@ end
 function util.not_implemented()
     -- print(debug.traceback("*** Not implemented ***", 2))
     -- print ""
+end
+
+function util.print( ... )
+    if debug then
+        print( ... )
+    end
+end
+
+function util.debug(flag)
+    util.check_argument(flag, "boolean", "util.debug", 1)
+
+    debug = flag
 end
 
 return util
