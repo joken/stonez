@@ -549,8 +549,8 @@ function stonez.Field(given_filling_field, given_stone_field)
         util.check_argument(position_edge, "table", "next_contour", 1)
         util.check_argument(direction, "number", "next_contour", 2)
 
-        for dir = direction, direction + 8 do
-            dir = normalize_direction(inverse(dir) + 1)
+        for dir = direction + 5, direction + 5 + 8 do
+            dir = normalize_direction(dir)
 
             local v = vector(dir)
             local position = {

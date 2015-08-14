@@ -166,6 +166,74 @@ local function Slots( ... )
         return pairs_deployed
     end
 
+    -- 2進表現
+    local function string_binary()
+        local s = ""
+        for _, pair in ipairs(pairs_stone_segment) do
+            s = s .. pair.gene_segment:dump_raw()
+        end
+        return s
+    end
+
+    -- 範囲内に納める
+    local function clamp(x, max, min)
+        return math.min(math.max(x, min), max)
+    end
+
+    -- 指紋
+    -- Value     | 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+    -- Character |   . o + = * B O X @  %  &  #  /  ^  S  E
+
+    function Slots:fingerprint()
+        -- フィールド
+        local field = { }
+        -- 文字
+        local symbols = {
+            ".", "o", "+", "=", "*", "B", "O", "X",
+            "@", "%", "&", "#", "/", "^",
+            [0] = " ",
+            [-1] = "S",
+            [-2] = "E",
+        }
+        -- 最大値
+        local size = math.floor(math.log(#pairs_stone_segment, 2))
+        local max_x = 8 * size
+        local max_y = 4 * size
+        -- 初期化
+        for j = 0, max_y do
+            field[j] = { }
+            for i = 0, max_x do
+                field[j][i] = 0
+            end
+        end
+        -- 初期位置
+        local home_x = (max_x + 1) // 2
+        local home_y = (max_y + 1) // 2
+        x, y = home_x, home_y
+        -- 生成
+        for a, b in string_binary():gmatch "(.)(.)" do
+            local delta_x = b == "0" and -1 or 1
+            local delta_y = a == "0" and -1 or 1
+            x = clamp(x + delta_x, max_x, 0)
+            y = clamp(y + delta_y, max_y, 0)
+            field[y][x] = field[y][x] + 1
+        end
+        -- 初期位置と終了位置をマーク
+        field[home_y][home_x] = -1
+        field[y][x] = -2
+        -- 文字列に変換
+        local s = "+" .. ("-"):rep(max_x + 1) .. "+\n"
+        for j = 0, max_y do
+            s = s .. "|"
+            for i = 0, max_x do
+                s = s .. symbols[clamp(field[j][i], 14, -2)]
+            end
+            s = s .. "|\n"
+        end
+        s = s .. "+" .. ("-"):rep(max_x + 1) .. "+"
+        return s
+    end
+
     --- メタテーブル ---
 
     local meta = { }
@@ -178,12 +246,13 @@ local function Slots( ... )
     end
 
     function meta:__tostring()
-        local s = ("[%s] %d\n"):format(self.class_name, #pairs_stone_segment)
-        for index, pair in ipairs(pairs_stone_segment) do
-            -- s = s .. ("%d:\n%s\n"):format(index, tostring(pair.gene_segment))
-            s = s .. pair.gene_segment:dump_raw() .. "\n"
-        end
-        return s
+        -- local s = ("[%s] %d\n"):format(self.class_name, #pairs_stone_segment)
+        -- for index, pair in ipairs(pairs_stone_segment) do
+        --     -- s = s .. ("%d:\n%s\n"):format(index, tostring(pair.gene_segment))
+        --     s = s .. pair.gene_segment:dump_raw() .. "\n"
+        -- end
+        -- return s
+        return self:fingerprint()
     end
 
     return setmetatable(Slots, meta)
