@@ -18,14 +18,14 @@ local function main()
     local stones = parser:stones()
 
     -- 遺伝子の総数(round 刻みに丸まる)
-    local count_gene = 500
-    local round = 100
+    local count_gene = 10
+    local round = 1
 
     -- 選択する遺伝子の個数
     local count_selection = 4
 
     -- 世代数
-    local count_generation = 2
+    local count_generation = 4
 
     -- 突然変異する確率
     local probability_mutation = 0.04
@@ -85,6 +85,7 @@ local function main()
         print ""
         for _, result in ipairs(selected) do
             print(result.score, result.count)
+            print(result.gene)
         end
 
         -- 遺伝子を初期化
@@ -99,11 +100,12 @@ local function main()
         for i = 1, count_gene - count_selection do
 
             -- 交叉する遺伝子の選択
-            local gene1 = selected[math.random(count_selection)].gene
-            local gene2
-            repeat
-                gene2 = selected[math.random(count_selection)].gene
-            until gene2 ~= gene1
+            local index1 = math.random(count_selection)
+            local index2 = (
+                math.random(count_selection - 1) + index1 - 1
+            ) % count_selection + 1
+            local gene1 = selected[index1].gene
+            local gene2 = selected[index2].gene
 
             -- 交叉
             local new_gene = gene1:crossover(gene2)
