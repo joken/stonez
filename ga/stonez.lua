@@ -577,15 +577,17 @@ function stonez.Field(given_filling_field, given_stone_field)
         -- デバッグ用に輪郭を出力 --
 
         -- 位置の初期値 ラスタスキャンして左上
-        local position_edge = raster_top_left()
+        local position_init = raster_top_left()
         -- x 方向
-        local direction = 5
+        local direction_init = 5
+
+        local position_edge = position_init
+        local direction = direction_init
 
         local history = {  }
 
         local i = 1
-        while true do
-
+        repeat
             for dir_4 = 1, 4 do
                 local delta = vector_4(dir_4)
                 local neighbor = {
@@ -600,30 +602,35 @@ function stonez.Field(given_filling_field, given_stone_field)
                     -- field[neighbor.y]:set(neighbor.x)
                     -- デバッグ用に輪郭を出力 --
 
+                    local contour = {
+                        position = neighbor,
+                        direction = vector_4(
+                            normalize_direction_4(dir_4 + 2)
+                        ),
+                    }
+
                     if i == edge_position then
 
                         -- デバッグ用に輪郭を出力 --
                         -- util.print(stonez.Field(field))    
                         -- デバッグ用に輪郭を出力 --
 
-                        return {
-                            position = neighbor,
-                            direction = vector_4(
-                                normalize_direction_4(dir_4 + 2)
-                            ),
-                        }
+                        return contour
                     end
+                    history[i] = contour
                     i = i + 1
                 end
             end
 
             -- 次の輪郭素片を探す
             position_edge, direction = next_contour(position_edge, direction)
-        end
+
+        until position_edge.x == position_init.x and
+            position_edge.y == position_init.y
  
         -- メモ edge_position のモジュロをとって高速化
 
-        return 
+        return history[edge_position % #history + 1]
     end
 
     -- 石を位置指定で配置

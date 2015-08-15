@@ -18,17 +18,17 @@ local function main()
     local stones = parser:stones()
 
     -- 遺伝子の総数(round 刻みに丸まる)
-    local count_gene = 10
-    local round = 1
+    local count_gene = 2000
+    local round = 200
 
     -- 選択する遺伝子の個数
-    local count_selection = 4
+    local count_selection = count_gene // 100
 
     -- 世代数
-    local count_generation = 4
+    local count_generation = 20
 
     -- 突然変異する確率
-    local probability_mutation = 0.04
+    local probability_mutation = 0.3
 
     -- 1世代目の遺伝子をランダム生成
     local genes = { }
@@ -37,13 +37,18 @@ local function main()
     end
 
     -- 1世代分の結果
-    local results = { }
+    local results
 
     -- デバッグフラグ(表示系)
     util.debug(false)
 
     -- 世代数だけ，遺伝子の生成，評価および選択を行う
     for i = 1, count_generation do
+        -- 1世代分の結果
+        results = { }
+
+        print("GENERATION: " .. i)
+
         -- 遺伝子を生成して評価
         for i = 1, count_gene // round do
             io.write "#"
@@ -77,15 +82,40 @@ local function main()
             end
         )
 
+        if i == count_generation then
+            break
+        end
+
+        local function is_selected(selected, result)
+            if result == nil then
+                return false
+            end
+            for key, value in pairs(selected) do
+                if value.gene:equals(result.gene) then
+                    return true
+                end
+            end
+            return false
+        end
+
         -- 上位の遺伝子を選択
         local selected = { }
-        table.move(results, 1, count_selection, 1, selected)
+        -- table.move(results, 1, count_selection, 1, selected)
+        local index = 1
+        for i = 1, count_selection do
+            local candidate
+            repeat
+                candidate = results[index]
+                index = index + 1
+            until not is_selected(selected, candidate)
+            selected[#selected + 1] = candidate
+        end
 
         -- 選択した遺伝子の評価値を表示
         print ""
         for _, result in ipairs(selected) do
             print(result.score, result.count)
-            print(result.gene)
+            -- print(result.gene)
         end
 
         -- 遺伝子を初期化
@@ -98,6 +128,10 @@ local function main()
 
         -- 残数分の遺伝子を生成
         for i = 1, count_gene - count_selection do
+        -- for i = 1, count_gene do
+            if i % round == 1 then
+                io.write "#"
+            end
 
             -- 交叉する遺伝子の選択
             local index1 = math.random(count_selection)
@@ -117,7 +151,15 @@ local function main()
 
             genes[#genes + 1] = new_gene
         end
+        print "\ncollecting garbage..."
+        collectgarbage "collect"
+        print ""
     end
+    -- デバッグフラグ(表示系)
+    util.debug(true)
+
+    -- 結果を表示(無理矢理)
+    results[1].gene:score(field)
 
 end
 

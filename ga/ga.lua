@@ -31,9 +31,22 @@ local function GeneSegment(given_raw_gene)
 
     --- メソッド ---
 
-    -- 交叉
-    function GeneSegment:crossover()
+    -- 等価判定
+    function GeneSegment:equals(given_gene_segment)
+        return raw_gene == given_gene_segment:raw()
+    end
 
+    -- 突然変異
+    function GeneSegment:mutate()
+        return GeneSegment.class(raw_gene ~ (0x1 << (math.random(18) - 1)))
+    end
+
+    -- 交叉
+    function GeneSegment:crossover(given_gene_segment)
+        local mask = (math.random(0x200) - 1) + ((math.random(0x200) - 1) << 9)
+        local a = raw_gene
+        local b = given_gene_segment:raw()
+        return GeneSegment.class((a & b | a & ~ mask | b & mask) & 0x3FFFF)
     end
 
     -- 全プロパティの文字列表現
@@ -52,6 +65,11 @@ local function GeneSegment(given_raw_gene)
             s = ((raw_gene >> i) & 1) .. s
         end
         return s
+    end
+
+    -- 生の値
+    function GeneSegment:raw()
+        return raw_gene
     end
 
     -- 複製
@@ -114,6 +132,49 @@ local function Slots( ... )
 
     --- メソッド ---
 
+    -- 等価判定
+    local function equals_slots(given_slots)
+        return given_slots:equals(pairs_stone_segment)
+    end
+
+    -- 等価判定
+    local function equals_pairs(given_pairs)
+        -- 等価判定
+        for key, pair in pairs(pairs_stone_segment) do
+            if not pair.gene_segment:equals(given_pairs[key].gene_segment) then
+                return false
+            end
+        end
+        return true
+    end
+
+    -- 等価判定
+    -- 引数は等価判定するお相手の Slot か ペアの集合
+    function Slots:equals( ... )
+        local args = { ... }
+        util.check_argument(args[1], "table", "Slots:equals", 1)
+        if args[1].class_name == "Slots" then
+            return equals_slots(args[1])
+        end
+        return equals_pairs(args[1])
+    end    
+
+    -- 突然変異
+    local function mutate_at(key)
+        pairs_stone_segment[key].gene_segment:mutate()
+    end
+
+    -- 突然変異
+    function Slots:mutate(key)
+        if key then
+            mutate_at(key)
+            return
+        end
+        local new_slots = Slots.class(pairs_stone_segment)
+        new_slots:mutate(math.random(#pairs_stone_segment))
+        return new_slots
+    end
+
     -- 交叉
     local function crossover_slots(given_slots)
         return given_slots:crossover(pairs_stone_segment)
@@ -123,17 +184,14 @@ local function Slots( ... )
     local function crossover_pairs(given_pairs)
         local new_pairs = { }
 
-        -- 複製
-        for _, pair in pairs(pairs_stone_segment) do
-            new_pairs[#new_pairs + 1] = {
-                stone = pair.stone,
-                gene_segment = pair.gene_segment:clone(),
-            }
-        end
-
         -- 交叉
         for key, pair in pairs(pairs_stone_segment) do
-            pair.gene_segment:crossover(given_pairs[key])
+            new_pairs[#new_pairs + 1] = {
+                stone = pair.stone,
+                gene_segment = pair.gene_segment:crossover(
+                    given_pairs[key].gene_segment
+                ),
+            }
         end
 
         return Slots.class(new_pairs)
@@ -167,7 +225,7 @@ local function Slots( ... )
     end
 
     -- 2進表現
-    local function string_binary()
+    function Slots:string_binary()
         local s = ""
         for _, pair in ipairs(pairs_stone_segment) do
             s = s .. pair.gene_segment:dump_raw()
@@ -180,13 +238,53 @@ local function Slots( ... )
         return math.min(math.max(x, min), max)
     end
 
+    -- 指紋生成
+    local function generate_fingerprint(str, max_x, max_y)
+        -- 初期位置
+        local home_x = (max_x + 1) // 2
+        local home_y = (max_y + 1) // 2
+        local x, y = home_x, home_y
+        -- フィールド
+        local field = { }
+        -- 初期化
+        for j = 0, max_y do
+            field[j] = { }
+            for i = 0, max_x do
+                field[j][i] = 0
+            end
+        end
+        -- 生成
+        for a, b in str:gmatch "(.)(.)" do
+            local delta_x = b == "0" and -1 or 1
+            local delta_y = a == "0" and -1 or 1
+            x = clamp(x + delta_x, max_x, 0)
+            y = clamp(y + delta_y, max_y, 0)
+            field[y][x] = field[y][x] + 1
+        end
+        -- 初期位置と終了位置をマーク
+        field[home_y][home_x] = -1
+        field[y][x] = -2
+        return field
+    end
+
+    -- 文字列に変換
+    local function fingerprint_string(field, symbols, max_x, max_y)
+        local s = "+" .. ("-"):rep(max_x + 1) .. "+\n"
+        for j = 0, max_y do
+            s = s .. "|"
+            for i = 0, max_x do
+                s = s .. symbols[clamp(field[j][i], 14, -2)]
+            end
+            s = s .. "|\n"
+        end
+        s = s .. "+" .. ("-"):rep(max_x + 1) .. "+"
+        return s
+    end
+
     -- 指紋
     -- Value     | 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
     -- Character |   . o + = * B O X @  %  &  #  /  ^  S  E
-
     function Slots:fingerprint()
-        -- フィールド
-        local field = { }
         -- 文字
         local symbols = {
             ".", "o", "+", "=", "*", "B", "O", "X",
@@ -199,39 +297,10 @@ local function Slots( ... )
         local size = math.floor(math.log(#pairs_stone_segment, 2))
         local max_x = 8 * size
         local max_y = 4 * size
-        -- 初期化
-        for j = 0, max_y do
-            field[j] = { }
-            for i = 0, max_x do
-                field[j][i] = 0
-            end
-        end
-        -- 初期位置
-        local home_x = (max_x + 1) // 2
-        local home_y = (max_y + 1) // 2
-        x, y = home_x, home_y
-        -- 生成
-        for a, b in string_binary():gmatch "(.)(.)" do
-            local delta_x = b == "0" and -1 or 1
-            local delta_y = a == "0" and -1 or 1
-            x = clamp(x + delta_x, max_x, 0)
-            y = clamp(y + delta_y, max_y, 0)
-            field[y][x] = field[y][x] + 1
-        end
-        -- 初期位置と終了位置をマーク
-        field[home_y][home_x] = -1
-        field[y][x] = -2
+        -- 生の指紋を生成
+        local field = generate_fingerprint(self:string_binary(), max_x, max_y)
         -- 文字列に変換
-        local s = "+" .. ("-"):rep(max_x + 1) .. "+\n"
-        for j = 0, max_y do
-            s = s .. "|"
-            for i = 0, max_x do
-                s = s .. symbols[clamp(field[j][i], 14, -2)]
-            end
-            s = s .. "|\n"
-        end
-        s = s .. "+" .. ("-"):rep(max_x + 1) .. "+"
-        return s
+        return fingerprint_string(field, symbols, max_x, max_y)
     end
 
     --- メタテーブル ---
@@ -274,9 +343,33 @@ function ga.Gene( ... )
 
     --- メソッド ---
 
+    -- 等価判定
+    local function equals_gane(given_gene)
+        return given_gene:equals(slots)
+    end
+
+    -- 等価判定
+    local function equals_slots(given_slots)
+        return slots:equals(given_slots)
+    end
+
+    -- 等価判定
+    function Gene:equals( ... )
+        local args = { ... }
+        util.check_argument(args[1], "table", "Gene:equals", 1)
+        if args[1].class_name == "ga.Gene" then
+            return equals_gane(args[1])
+        end
+        if args[1].class_name == "Slots" then
+            return equals_slots(args[1])
+        end
+        print(args[1].class, ga.Gene)
+        error (("bad argument to '%s'"):format("Gene:equals"), 2)
+    end
+
     -- 突然変異
     function Gene:mutate()
-        return self
+        return ga.Gene(slots:mutate())
     end
 
     -- 交叉
@@ -355,6 +448,11 @@ function ga.Gene( ... )
         -- 全部を配置した
         -- フィールドに対する得点を求めて返す
         return field:score(), field:count_deployed()
+    end
+
+    -- 2進表現
+    function Gene:string_binary()
+        return slots:string_binary()
     end
 
     -- メタテーブル --
