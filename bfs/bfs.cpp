@@ -103,11 +103,12 @@ void dump_stone(Stone &s) {
   }
 }
 
-int put_stone(Field& f, std::deque<Position>next_candidates, int n, Position pos) {
+int put_stone(Field& f, std::deque<Position>& next_candidates, int n, Position pos) {
   Field backup = f;
   int score = 0;
   int dy[] = {-1, 0, 0, 1},
       dx[] = {0, -1, 1, 0};
+  next_candidates.clear();
   for (auto it = stones[n].candidates.begin(); it != stones[n].candidates.end(); ++it) {
     // if this stone cannot be put on this position
     if (f.raw[pos.y + it->y][pos.x + it->x] != empty_val) {
@@ -165,11 +166,14 @@ int solve() {
       }
       make_arguments(args, args.front().f, args.front().i + 1, next_candidates, args.front().score);
       fprintf(stderr, "score: %d\n", args.front().score);
-      fprintf(stdout, "score: %d\n", args.front().score);
+      fprintf(stdout, "score: %d, remaining patters: %d\n", args.front().score, args.size());
       dump_field(args.front().f);
       fprintf(stdout, "\n");
     }
     args.pop();
+    if (args.front().i != 0) {
+      next_candidates.clear();
+    }
   }
   printf("max score is %d\n", max_score);
   dump_field(max_score_field);
