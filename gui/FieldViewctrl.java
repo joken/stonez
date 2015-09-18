@@ -2,8 +2,6 @@ package com.procon.gui;
 
 import java.io.File;
 
-import com.procon.gui.Field.ZukuState;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -13,6 +11,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+
+import com.procon.gui.Field.ZukuState;
 
 public class FieldViewctrl {
 	private static final int ZUKU_SIZE = 15;

@@ -26,7 +26,7 @@ public class FieldView extends Application{
 	public void start(Stage stage) throws Exception {
 
 		FXMLLoader loader = new FXMLLoader
-				(getClass().getResource("/fieldview.fxml"));
+				(getClass().getResource("fieldview.fxml"));
         Parent root = (Parent)loader.load();
 		Scene scene = new Scene(root);
 		stage.setScene(scene);

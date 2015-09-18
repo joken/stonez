@@ -39,6 +39,7 @@ public class Field {
 		        break;
 		      case 1:
 		        state = Color.rgb(1,1,223);//青色
+		        break;
 		      case 2:
 		    	state = Color.rgb(0,0,0);//黒色
 		        break;
@@ -82,12 +83,13 @@ public class Field {
 				System.out.println(a);
 				char[] cl = a.toCharArray();
 				for (char c : cl) {
-					switch ((int)c) {
-					case 0:
+					switch (c) {
+					case '0':
 						zstate[i][i] = ZukuState.NONE;
 						break;
-					case 1:
+					case '1':
 						zstate[i][i] = ZukuState.OBSTACLE;
+						break;
 					default:
 						zstate[i][i] = ZukuState.OBSTACLE;
 					}
@@ -102,12 +104,12 @@ public class Field {
 			stones.add(new ZukuState[STONE_SIZE][STONE_SIZE]);
 			suiren = in.readLine();
 			for(int j = 0; j < STONE_SIZE; j++){
+				System.out.println(suiren);
 				char[] buri = suiren.toCharArray();
-				System.out.println(String.valueOf(buri));
-				for(int k = 0; k < buri.length; k++){
+				for(int k = 0; k < STONE_SIZE; k++){
 					ZukuState[][] z = stones.get(i);
-					switch((int)buri[k]){
-					case 1:
+					switch(buri[k]){
+					case '1':
 						z[j][k] = ZukuState.STONE;
 						break;
 					default:
