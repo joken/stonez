@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 import com.procon.gui.Field.ZukuState;
 
 public class FieldViewctrl {
-	private static final int ZUKU_SIZE = 15;
 
 	private Stage FieldViewStage;
 	@FXML private Label state;
@@ -72,19 +71,15 @@ public class FieldViewctrl {
 	}
 
 	private void SetField(){
+		Rectangle[][] r = new Rectangle[Field.FIELD_SIZE][Field.FIELD_SIZE];
 		ZukuState[][] F = FieldView.field.getField();
-		int curX = 0;
-		int curY = 0;
 		for(int i = 0; i < Field.FIELD_SIZE; i++){
 			for(int j = 0; j < Field.FIELD_SIZE; j++){
-				Rectangle r = new Rectangle(ZUKU_SIZE,ZUKU_SIZE,
-						F[i][j].getState());
-				FieldPane.getChildren().add(r);
-				r.relocate(curX, curY);
-				curX += ZUKU_SIZE;
-				curY += ZUKU_SIZE;
+				r[i][j] = F[i][j].getState();
 			}
 		}
+		//型があわない
+		//FieldPane.getChildren().addAll(r);
 	}
 
 }
