@@ -8,8 +8,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
 public class Field {
+	public static final int ZUKU_SIZE = 15;
 	public static final int FIELD_SIZE = 32;
 	public static final int STONE_SIZE = 8;
 	private ZukuState[][] zstate;
@@ -26,7 +28,7 @@ public class Field {
 		  STONE(1),//石を置いてる
 		  OBSTACLE(2);//最初からある障害物
 
-		  private Color state;//JavaFXのColor
+		  private Rectangle state;//JavaFXのColor
 
 		  private ZukuState(int id){
 		    setstate(id);
@@ -35,20 +37,21 @@ public class Field {
 		  private void setstate(int id) {
 			  switch(id){
 		      case 0:
-		        state = Color.rgb(255,255,255);//白色
+		        state = new Rectangle(ZUKU_SIZE,ZUKU_SIZE,Color.WHITE);//白色
 		        break;
 		      case 1:
-		        state = Color.rgb(1,1,223);//青色
+		        state = new Rectangle(ZUKU_SIZE,ZUKU_SIZE,Color.LIGHTBLUE);//青色
 		        break;
 		      case 2:
-		    	state = Color.rgb(0,0,0);//黒色
+		    	state = new Rectangle(ZUKU_SIZE,ZUKU_SIZE,Color.BLACK);//黒色
 		        break;
 		      default:
-		    	  state = Color.RED;
+		    	  state = new Rectangle(ZUKU_SIZE,ZUKU_SIZE,Color.VIOLET);
 			    }
+			  state.setStrokeWidth(1.0);
 			}
 
-		public Color getState(){
+		public Rectangle getState(){
 			return state;
 		}
 	}
@@ -82,18 +85,18 @@ public class Field {
 				String a = in.readLine();
 				System.out.println(a);
 				char[] cl = a.toCharArray();
-				for (char c : cl) {
-					switch (c) {
+				for (int j = 0; j < FIELD_SIZE; j++) {
+					switch (cl[j]) {
 					case '0':
-						zstate[i][i] = ZukuState.NONE;
+						zstate[i][j] = ZukuState.NONE;
 						break;
 					case '1':
-						zstate[i][i] = ZukuState.OBSTACLE;
+						zstate[i][j] = ZukuState.OBSTACLE;
 						break;
 					default:
-						zstate[i][i] = ZukuState.OBSTACLE;
+						zstate[i][j] = ZukuState.OBSTACLE;
 					}
-				System.out.println(zstate[i][i].toString());
+				System.out.println(zstate[i][j].toString());
 				}
 			}
 		in.readLine();
@@ -102,13 +105,14 @@ public class Field {
 				(String.valueOf(suiren));
 		for(int i = 0; i < StoneCount; i++){//石情報取得
 			stones.add(new ZukuState[STONE_SIZE][STONE_SIZE]);
-			suiren = in.readLine();
 			for(int j = 0; j < STONE_SIZE; j++){
+				do {
+					suiren = in.readLine();
+				} while (!suiren.isEmpty());
 				System.out.println(suiren);
-				char[] buri = suiren.toCharArray();
 				for(int k = 0; k < STONE_SIZE; k++){
 					ZukuState[][] z = stones.get(i);
-					switch(buri[k]){
+					switch(suiren.charAt(k)){
 					case '1':
 						z[j][k] = ZukuState.STONE;
 						break;
