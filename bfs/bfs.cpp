@@ -164,11 +164,14 @@ int solve() {
         max_score = args.front().score;
         max_score_field = args.front().f;
       }
-      make_arguments(args, args.front().f, args.front().i + 1, next_candidates, args.front().score);
-      fprintf(stderr, "score: %d\n", args.front().score);
-      fprintf(stdout, "score: %d, remaining patters: %d\n", args.front().score, args.size());
-      dump_field(args.front().f);
-      fprintf(stdout, "\n");
+      if (args.size() > 1000) {
+        args.pop();
+      }
+        make_arguments(args, args.front().f, args.front().i + 1, next_candidates, args.front().score);
+        fprintf(stderr, "score: %d\n", args.front().score);
+        fprintf(stdout, "score: %d, remaining patters: %d\n", args.front().score, args.size());
+        dump_field(args.front().f);
+        fprintf(stdout, "\n");
     }
     args.pop();
     if (args.front().i != 0) {
