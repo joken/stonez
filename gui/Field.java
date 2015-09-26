@@ -28,7 +28,7 @@ public class Field {
 		  STONE(1),//石を置いてる
 		  OBSTACLE(2);//最初からある障害物
 
-		  private Rectangle state;//JavaFXのColor
+		  private Rectangle state;//JavaFXのRectangle
 
 		  private ZukuState(int id){
 		    setstate(id);
@@ -54,6 +54,7 @@ public class Field {
 		public Rectangle getState(){
 			return state;
 		}
+
 	}
 
 	public ZukuState[][] getField(){return zstate;}
@@ -96,22 +97,22 @@ public class Field {
 					default:
 						zstate[i][j] = ZukuState.OBSTACLE;
 					}
-				System.out.println(zstate[i][j].toString());
 				}
 			}
 		in.readLine();
 		suiren = in.readLine();//石の個数カウント
 		int StoneCount = Integer.parseUnsignedInt
 				(String.valueOf(suiren));
+		suiren = null;
 		for(int i = 0; i < StoneCount; i++){//石情報取得
 			stones.add(new ZukuState[STONE_SIZE][STONE_SIZE]);
+			ZukuState[][] z = stones.get(i);
 			for(int j = 0; j < STONE_SIZE; j++){
 				do {
 					suiren = in.readLine();
-				} while (!suiren.isEmpty());
-				System.out.println(suiren);
+				} while (suiren == null || suiren.isEmpty());
+				System.err.println(suiren);
 				for(int k = 0; k < STONE_SIZE; k++){
-					ZukuState[][] z = stones.get(i);
 					switch(suiren.charAt(k)){
 					case '1':
 						z[j][k] = ZukuState.STONE;

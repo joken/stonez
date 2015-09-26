@@ -49,8 +49,8 @@ public class FieldViewctrl {
 							try {
 								FieldView.field.setFile
 								(f.getAbsolutePath());
-								state.setText("done");
 								SetField();
+								state.setText("done");
 							} catch (Exception e2) {
 								// TODO: handle exception
 								e2.printStackTrace();
@@ -68,6 +68,7 @@ public class FieldViewctrl {
 					+ "this is not file.");
 			e.setDropCompleted(false);
 		}
+		e.setDropCompleted(true);
 	}
 
 	private void SetField(){
@@ -76,6 +77,10 @@ public class FieldViewctrl {
 		for(int i = 0; i < Field.FIELD_SIZE; i++){
 			for(int j = 0; j < Field.FIELD_SIZE; j++){
 				r[i][j] = F[i][j].getState();
+				r[i][j].setX(j * Field.ZUKU_SIZE);
+				r[i][j].setY(i * Field.ZUKU_SIZE);
+				System.out.println(r[i][j].toString());
+				FieldPane.getChildren().add(r[i][j]);
 			}
 		}
 		//型があわない
