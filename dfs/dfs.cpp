@@ -1,7 +1,9 @@
 #include <cstdio>
+#include <cstdlib>
 #include <vector>
 #include <queue>
 #include <deque>
+#include <string>
 
 const int stone_size = 8;
 const int field_size = 32;
@@ -16,6 +18,7 @@ struct Stone {
 struct Field {
   int raw[field_size][field_size];
   std::vector<Position> empties;
+  std::vector<std::string> answer;
   // フィールドの評価とか、石をおいた記録とかも変数で持つつもり
 };
 
@@ -26,7 +29,18 @@ struct Argument {
   int score;
 };
 
-Stone stones[256 + 1];
+Stone stones[256 * 8 + 1];
+/*
+ * rot90  256 - 511
+ * rot180 512 - 767
+ * rot270 768 - 1023
+ * fliped 1024 - 1279
+ * rot90  + fliped 1280 - 1535
+ * rot180 + fliped 1536 - 1791
+ * rot270 + fliped 1792 - 2047
+ */
+const int fliped = 1024;
+const int rot[] = {0, 256, 512, 768};
 Field initial_field;
 int number_of_stones;
 const int empty_val = -1;
@@ -59,6 +73,21 @@ void get_field() {
   }
 }
 
+void rotate_stone(int n, int deg) {
+  for (int i = 0; i < stones[n].fills.size(); ++i) {
+    stones[n + rot[deg/90]].fills.push_back(Position{stones[n].fills[i].x, 7 - stones[n].fills[i].y});
+  }
+
+  if (deg != 270) {
+    rotate_stone(n, deg+90);
+  }
+}
+
+void flip_stone(int n) {
+  for (int i = 0; i < stones[n].fills.size(); ++i) {
+    stones[n + fliped].fills.push_back(Position{stones[n].fills[i].y, 7 - stones[n].fills[i].x});
+  }
+}
 void get_stone(int index) {
   for (int i = 0; i < stone_size; ++i) {
     for (int j = 0; j < stone_size; ++j) {
@@ -76,6 +105,10 @@ void get_stones() {
   for (int i = 0; i < number_of_stones; ++i) {
     get_stone(i);
     read_br();
+
+    flip_stone(i);
+    rotate_stone(i, 90);
+    rotate_stone(i + fliped, 90);
   }
 }
 void get_input() {
@@ -136,27 +169,50 @@ int put_stone(Field& f, Position p, int n, std::vector<Position>& next_positions
   return score;
 }
 
-int solve(Field f, Position p, int i, int nowscore) {
+void print_answer(std::vector<std::string>& ans) {
+  for (int i = 0; i < number_of_stones; ++i) {
+    printf("%s\r\n", ans[i].c_str());
+  }
+}
+
+std::string make_answer(Position p, int flip, int rotate) {
+  return std::to_string(p.x) + " " + std::to_string(p.y) + " " + ((flip == 0) ? "H" : "T") + " " + std::to_string(rotate);
+}
+
+int solve(Field f, Position p, int flip, int rotate, int i, int nowscore) {
   if (i >= number_of_stones) {
     return 0;
   }
+  int u = i;
+
+  if (flip == 1) {
+    u += fliped;
+  }
+
+  u += rot[rotate / 90];
 
   std::vector<Position> next_positions;
   int score = 0;
 
-  if (score = put_stone(f, p, i, next_positions)) {
+  if (score = put_stone(f, p, u, next_positions)) {
     score += nowscore;
     if (score > max_score) {
       max_score = score;
       max_score_field = f;
-      fprintf(stderr, "max score %d!\n,", score);
+      fprintf(stderr, "max score %d!\n", score);
     }
+    f.answer[i] = make_answer(p, flip, rotate);
     printf("score: %d\n", score);
     dump_field(f);
+    print_answer(f.answer);
+    int rot_buf[] = {0, 90, 180, 270};
     for (auto && f_p : next_positions) {
       for (int j = i + 1; j < number_of_stones; ++j) {
         for (auto && s_p : stones[j].fills) {
-          solve(f, Position{f_p.y - s_p.y, f_p.x - s_p.x}, j, score);
+          for (int k = 0; k < 4; ++k) {
+            solve(f, Position{f_p.y - s_p.y, f_p.x - s_p.x}, 0, rot_buf[k], j, score);
+            solve(f, Position{f_p.y - s_p.y, f_p.x - s_p.x}, 1, rot_buf[k], j, score);
+          }
         }
       }
     }
@@ -167,11 +223,16 @@ int solve(Field f, Position p, int i, int nowscore) {
 
 
 int main() {
+  initial_field.answer.resize(256);
   get_input();
   dump_stone(stones[0]);
+  int rot_buf[] = {0, 90, 180, 270};
   for (auto && s : stones[0].fills) {
     for (auto && f : initial_field.empties) {
-      solve(initial_field, Position{f.y - s.y, f.x - s.x}, 0, 0);
+      for (int k = 0; k < 4; ++k) {
+        solve(initial_field, Position{f.y - s.y, f.x - s.x}, 0, rot_buf[k], 0, 0);
+        solve(initial_field, Position{f.y - s.y, f.x - s.x}, 1, rot_buf[k], 0, 0);
+      }
     }
   }
 
