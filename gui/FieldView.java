@@ -28,6 +28,9 @@ public class FieldView extends Application{
 		FXMLLoader loader = new FXMLLoader
 				(getClass().getResource("fieldview.fxml"));
         Parent root = (Parent)loader.load();
+        //ControllerにStageを渡しておく(別窓作成時に必要)
+        FieldViewctrl ctrl = (FieldViewctrl)loader.getController();
+        ctrl.setStage(stage);
 		Scene scene = new Scene(root);
 		stage.setScene(scene);
 		stage.setTitle("石畳職人Z");

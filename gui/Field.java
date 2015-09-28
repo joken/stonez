@@ -61,12 +61,11 @@ public class Field {
 
 	public ArrayList<ZukuState[][]> getStones(){return stones;}
 
-	//TODO GUIからもブチ込めるようにする
-	public void setFile(String name){
+	public String setFile(String name){
 		try(BufferedReader in = new BufferedReader(
 				new InputStreamReader(
 				new FileInputStream(name)))){
-			parse(in);
+			return parse(in);
 			}catch (FileNotFoundException e) {
 				System.err.println(e.toString());
 			}catch(IOException e){
@@ -74,17 +73,21 @@ public class Field {
 			}catch(Exception e){
 				e.printStackTrace();
 			}
+		return null;
 		}
 
 	/**
-	 * Procon純正フォーマットのParse
+	 * Procon問題フォーマットのParse
 	 * @param in 読み込み先を確保したStream(BufferedReaderで)
+	 * @return 問題データ(空白行カット)
 	 * */
-	private void parse(BufferedReader in) throws IOException{
+	private String parse(BufferedReader in) throws IOException{
 		String suiren;//一時
+		StringBuffer data = new StringBuffer();//@return
 		for(int i = 0; i < FIELD_SIZE; i++){//Field情報取得
 				String a = in.readLine();
 				System.out.println(a);
+				data.append(a + "\n");
 				char[] cl = a.toCharArray();
 				for (int j = 0; j < FIELD_SIZE; j++) {
 					switch (cl[j]) {
@@ -112,6 +115,7 @@ public class Field {
 					suiren = in.readLine();
 				} while (suiren == null || suiren.isEmpty());
 				System.err.println(suiren);
+				data.append(suiren + "\n");
 				for(int k = 0; k < STONE_SIZE; k++){
 					switch(suiren.charAt(k)){
 					case '1':
@@ -123,5 +127,24 @@ public class Field {
 				}
 			}
 		}
+		return data.toString();
 	}
+
+	/**
+	 * 複数行の回答フォーマットをParseする
+	 * @param paragraph 回答フォーマット(複数行)
+	 * */
+	public void setAns(String paragraph){
+		String[] lines = paragraph.split("\n");
+		for(int i = 0; i < lines.length; i++){
+			parse(lines[i]);
+		}
+	}
+
+	//TODO パーサ実装
+	/**
+	 * 単行の回答フォーマットをParseする
+	 * @param line 回答フォーマット(単行)
+	 * */
+	private void parse(String line){}
 }
