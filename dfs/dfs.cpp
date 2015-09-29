@@ -4,6 +4,7 @@
 #include <queue>
 #include <deque>
 #include <string>
+#include <sstream>
 
 const int stone_size = 8;
 const int field_size = 32;
@@ -45,6 +46,11 @@ Field initial_field;
 int number_of_stones;
 const int empty_val = -1;
 
+std::string to_string(int n) {
+	std::stringstream ss;
+	ss << n;
+	return ss.str();
+}
 int get() {
   return getc(stdin) - '0';
 }
@@ -176,7 +182,7 @@ void print_answer(std::vector<std::string>& ans) {
 }
 
 std::string make_answer(Position p, int flip, int rotate) {
-  return std::to_string(p.x) + " " + std::to_string(p.y) + " " + ((flip == 0) ? "H" : "T") + " " + std::to_string(rotate);
+  return to_string(p.x) + " " + to_string(p.y) + " " + ((flip == 0) ? "H" : "T") + " " + to_string(rotate);
 }
 
 int solve(Field f, Position p, int flip, int rotate, int i, int nowscore) {
