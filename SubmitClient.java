@@ -6,7 +6,7 @@ import java.net.Socket;
 public class SubmitClient {
 	public static void main(String[] args) {
 		try {
-			Socket sock = new Socket("localhost", 65432);
+			Socket sock = new Socket(args[1], 65432);
 
 			BufferedReader in = new BufferedReader(
 				new InputStreamReader(sock.getInputStream())
