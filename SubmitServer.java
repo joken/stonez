@@ -61,8 +61,10 @@ public class SubmitServer {
 			score = sc.nextInt();
 			num_stones = sc.nextInt();
 			int num_lines = sc.nextInt();
+			// 改行を読み飛ばす
+			sc.nextLine();
 			// データを読む
-			for (int i = 0; i < num_lines + 1; i++) {
+			for (int i = 0; i < num_lines; i++) {
 				data += sc.nextLine() + "\n";
 			}
 			// とりあえず表示

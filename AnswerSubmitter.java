@@ -1,15 +1,27 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
 /**
- * 提出器．
- * 過去に提出された解答よりも良い解答が与えられれば提出する．
+ * 提出器． 過去に提出された解答よりも良い解答が与えられれば提出する．
  *
  *
  * @author Kazuaki
@@ -33,9 +45,13 @@ public class AnswerSubmitter {
 
 	/**
 	 * 過去に提出された解答よりも良い解答が与えられれば提出する．
-	 * @param score 得点
-	 * @param num_stones 石数
-	 * @param data 解答
+	 *
+	 * @param score
+	 *            得点
+	 * @param num_stones
+	 *            石数
+	 * @param data
+	 *            解答
 	 * @return 結果の真偽
 	 */
 	public boolean submit(int score, int num_stones, String data) {
@@ -51,50 +67,60 @@ public class AnswerSubmitter {
 
 	// 提出
 	private void submit(String data) {
+		String data_crlf = data.replaceAll("\n", "\r\n");
+		File tmpFile = null;
 		try {
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			// creates temporary file
+			tmpFile = File.createTempFile("tmp", ".txt");
+			tmpFile.deleteOnExit();
 
-			// 設定
-			// 対話形式の無効化
-			con.setAllowUserInteraction(false);
-			// リダイレクトには従う
-			con.setInstanceFollowRedirects(true);
-			// POSTメソッドを使用
-			con.setRequestMethod("POST");
-			// キャッシュを使用しない
-			con.setUseCaches(false);
-			// Output有効化
-			con.setDoOutput(true);
-			// ContentType
-			con.setRequestProperty("Content-Type", "text/plain");
-
-			con.connect();
-
-			BufferedWriter out = new BufferedWriter(
-				new OutputStreamWriter(con.getOutputStream())
-			);
-
-			// 送信?
-			out.write(data);
-			out.flush();
-
-			//レスポンスの確認
-			if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
-				//UTF-8以外からは引数の文字列を変更(クソース)
-				InputStreamReader isr = new InputStreamReader(
-						con.getInputStream(),
-                        Charset.forName("UTF-8"));
-				BufferedReader in = new BufferedReader(isr);
-				String line;
-				while ((line = in.readLine()) != null) {
-					System.out.println(line);
-					}
-				in.close();
-			}else{
-				//エラー
-				System.out.println("Error " + con.getResponseCode());
-			}
+			// prints absolute path
+			System.out.println("File path: " + tmpFile.getAbsolutePath());
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try (BufferedWriter output = new BufferedWriter(new FileWriter(tmpFile))) {
+            output.write(data_crlf);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+			HttpPost httppost = new HttpPost(url.toURI());
+
+			FileBody answer = new FileBody(tmpFile);
+			StringBody token = new StringBody("0123456789abcdef",
+					ContentType.MULTIPART_FORM_DATA);
+			HttpEntity reqEntity = MultipartEntityBuilder.create()
+					.addPart("answer", answer).addPart("token", token).build();
+
+			httppost.setEntity(reqEntity);
+
+			System.out.println("executing request " + httppost.getRequestLine());
+			try (CloseableHttpResponse response = httpclient.execute(httppost)) {
+				System.out.println("----------------------------------------");
+				System.out.println(response.getStatusLine());
+				HttpEntity resEntity = response.getEntity();
+				if (resEntity != null) {
+					System.out.println("Response content length: " + resEntity.getContentLength());
+					// UTF-8以外からは引数の文字列を変更(クソース)
+					InputStreamReader isr = new InputStreamReader(
+							resEntity.getContent(), Charset.forName("UTF-8"));
+					BufferedReader in = new BufferedReader(isr);
+					String line;
+					while ((line = in.readLine()) != null) {
+						System.out.println(line);
+					}
+					in.close();
+				}
+				EntityUtils.consume(resEntity);
+			}
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
 	}
