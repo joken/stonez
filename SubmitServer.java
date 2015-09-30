@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
@@ -46,7 +47,8 @@ public class SubmitServer {
 
 	// 解答を受付
 	private static Answer acceptAnswer() {
-		int score, num_stones;
+		int score = 0;
+		int num_stones = 0;
 		String data = "";
 		try (
 			// いろいろ準備(1)
@@ -75,6 +77,8 @@ public class SubmitServer {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
+		} catch (NoSuchElementException e) {
+			e.printStackTrace();
 		}
 		// 解答を返す
 		return new Answer(score, num_stones, data);

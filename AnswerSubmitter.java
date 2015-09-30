@@ -60,6 +60,8 @@ public class AnswerSubmitter {
 			// 提出
 			submit(data);
 			data_latest = data;
+			score_min = score;
+			num_stones_max = num_stones;
 			return true;
 		}
 		return false;
@@ -67,25 +69,26 @@ public class AnswerSubmitter {
 
 	// 提出
 	private void submit(String data) {
-		String data_crlf = data.replaceAll("\n", "\r\n");
+		// 改行文字の置換
+		String data_crlf = data.replaceAll("\r\n", "\n").replaceAll("\n", "\r\n");
+		// POSTのときにファイルで渡すための一時ファイル
 		File tmpFile = null;
 		try {
 			// creates temporary file
-			tmpFile = File.createTempFile("tmp", ".txt");
-			tmpFile.deleteOnExit();
+			tmpFile = File.createTempFile("post", ".txt");
 
 			// prints absolute path
 			System.out.println("File path: " + tmpFile.getAbsolutePath());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		// 一時ファイルに解答を書く
 		try (BufferedWriter output = new BufferedWriter(new FileWriter(tmpFile))) {
             output.write(data_crlf);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		// 送信とか
 		try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
 			HttpPost httppost = new HttpPost(url.toURI());
 
@@ -94,7 +97,6 @@ public class AnswerSubmitter {
 					ContentType.MULTIPART_FORM_DATA);
 			HttpEntity reqEntity = MultipartEntityBuilder.create()
 					.addPart("answer", answer).addPart("token", token).build();
-
 			httppost.setEntity(reqEntity);
 
 			System.out.println("executing request " + httppost.getRequestLine());
@@ -122,6 +124,8 @@ public class AnswerSubmitter {
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
+		} finally {
+			tmpFile.delete();
 		}
 	}
 
