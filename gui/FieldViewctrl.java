@@ -14,7 +14,6 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -129,17 +128,19 @@ public class FieldViewctrl {
 	}
 
 	@FXML
-	private void onEditLaunch(){}
+	private void onEditLaunch(){
+		FieldEdit e = new FieldEdit();
+		e.launch();
+	}
 
 	private void SetField(){
-		ArrayList<Rectangle> r = new ArrayList<Rectangle>();
+		//デバッグようにつかってね
+		//(Setしたりとかし)ないです。
+		ArrayList<Integer> r = new ArrayList<Integer>();
 		ZukuState[][] F = FieldView.field.getField();
 		for(int i = 0; i < Field.FIELD_SIZE; i++){
 			for(int j = 0; j < Field.FIELD_SIZE; j++){
 				r.add(F[i][j].getState());
-				//r[i][j].setX(j * Field.ZUKU_SIZE);
-				//r[i][j].setY(i * Field.ZUKU_SIZE);
-
 				System.out.println(r.get(j).toString());
 			}
 		}
