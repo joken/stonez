@@ -233,11 +233,13 @@ int main() {
   get_input();
   dump_stone(stones[0]);
   int rot_buf[] = {0, 90, 180, 270};
-  for (auto && s : stones[0].fills) {
-    for (auto && f : initial_field.empties) {
-      for (int k = 0; k < 4; ++k) {
-        solve(initial_field, Position{f.y - s.y, f.x - s.x}, 0, rot_buf[k], 0, 0);
-        solve(initial_field, Position{f.y - s.y, f.x - s.x}, 1, rot_buf[k], 0, 0);
+  for (int i = 0; i < number_of_stones; ++i) {
+    for (auto && s : stones[i].fills) {
+      for (auto && f : initial_field.empties) {
+        for (int k = 0; k < 4; ++k) {
+          solve(initial_field, Position{f.y - s.y, f.x - s.x}, 0, rot_buf[k], i, 0);
+          solve(initial_field, Position{f.y - s.y, f.x - s.x}, 1, rot_buf[k], i, 0);
+        }
       }
     }
   }
