@@ -4,6 +4,7 @@
 #include <queue>
 #include <deque>
 #include <string>
+#include <algorithm>
 #include <sstream>
 
 const int stone_size = 8;
@@ -11,6 +12,9 @@ const int field_size = 32;
 
 struct Position{
   int y, x;
+  bool operator==(const Position&obj) const {
+    return y == obj.y && x == obj.x;
+  }
 };
 struct Stone {
   int raw[stone_size][stone_size];
@@ -119,6 +123,23 @@ void get_input() {
   get_stones();
 }
 
+void dump_field(Field &f, std::vector<Position>& ps) {
+  for (int i = 0; i < field_size; ++i) {
+    for (int j = 0; j < field_size; ++j) {
+      if (std::find(ps.begin(), ps.end(), Position{i, j}) != ps.end()) {
+        putc('_', stdout);
+      } else if (f.raw[i][j] == empty_val) {
+        putc('.', stdout);
+      } else if (f.raw[i][j] == filled_val) {
+        putc('#', stdout);
+      } else {
+        putc('@', stdout);
+      }
+      // printf("%d", f.raw[i][j] != empty_val);
+    }
+    printf("\n");
+  }
+}
 void dump_field(Field &f) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
