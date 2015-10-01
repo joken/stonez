@@ -45,6 +45,7 @@ const int rot[] = {0, 256, 512, 768};
 Field initial_field;
 int number_of_stones;
 const int empty_val = -1;
+const int filled_val = 256;
 
 std::string to_string(int n) {
 	std::stringstream ss;
@@ -61,18 +62,13 @@ void read_br() {
 };
 
 void get_field() {
-  for (int i = 0; i < stone_size; ++i) {
-    for (int j = 0; j < field_size; ++j) {
-      initial_field.raw[i][j] = 256;
-    }
-  }
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
       if (get() == 0) {
         initial_field.raw[i][j] = empty_val;
         initial_field.empties.push_back(Position{i, j});
       } else {
-        initial_field.raw[i][j] = 257;
+        initial_field.raw[i][j] = filled_val;
       }
     }
     read_br();
@@ -126,7 +122,14 @@ void get_input() {
 void dump_field(Field &f) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      printf("%d", f.raw[i][j] != empty_val);
+      if (f.raw[i][j] == empty_val) {
+        putc('.', stdout);
+      } else if (f.raw[i][j] == filled_val) {
+        putc('#', stdout);
+      } else {
+        putc('@', stdout);
+      }
+      // printf("%d", f.raw[i][j] != empty_val);
     }
     printf("\n");
   }
