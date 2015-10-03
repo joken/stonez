@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <vector>
+#include <deque>
 #include <string>
 #include <sstream>
 
@@ -10,37 +11,48 @@ const int empty_val = -1; // 障害物やzkの無いことを表す
 const int filled_val = 256; // 障害物を表す
 FILE* dumpout = stdout; // dump系関数の出力先
 
-struct Position{
+struct Position {
   /*座標を表現するクラス*/
   int y, x;
   bool operator==(const Position&obj) const {
     return y == obj.y && x == obj.x;
+  }
+  bool operator<(const Position&obj) const {
+    if (y == obj.y) {
+      return x < obj.x;
+    }
+    return y < obj.y;
   }
 };
 
 struct Stone {
   /* 石 */
   int raw[stone_size][stone_size]; // empty_val -> 空き, otherwise -> うまり
-  std::vector<Position> fills; // 埋まってる座標を持っておく
+  std::deque<Position> fills; // 埋まってる座標を持っておく
 };
 
 struct Field {
   /* フィールド */
   int raw[field_size][field_size];
-  std::vector<std::string> answer; // 答えとなる石の置き方を持っておく
+  std::deque<std::string> answer; // 答えとなる石の置き方を持っておく
 };
 
 int number_of_stones; // 与えられる石の数
 Stone stones[256 * 8]; // 石を持っておくインスタンス（回転反転を考慮して8倍とってある）
 Field initial_field; // 初期フィールド状態
+std::deque<Position> initial_empties; // 初期フィールドで空いている場所を探す
 
 int rotated(int n, int deg) {
   /* n番の石をdeg度まわした石の番号を返す */
-  return n + number_of_stones * (deg/90 + 1);
+  return n + number_of_stones * (deg/90);
 }
 int fliped(int n) {
   /* n番の石を反転した時の石の番号を返す */
   return n + number_of_stones * 4;
+}
+int all_stones_num() {
+  /* 全部で石が何個になるか */
+  return 8*number_of_stones;
 }
 
 /* util */
@@ -94,10 +106,22 @@ void dump_field(Field& f) {
 }
 
 /* stone manipurates */
+void init_stone(int n) {
+  /* 石を初期化しておく */
+  for (int i = 0; i < 8; ++i) {
+    for (int j = 0; j < 8; ++j) {
+      stones[n].raw[i][j] = empty_val;
+    }
+  }
+}
 void rotate_stone(int n, int deg) {
   /* 石を回す。deg = 90でよばれて、内部で180, 270をよぶ */
+  init_stone(rotated(n, deg));
   for (int i = 0; i < stones[n].fills.size(); ++i) {
-    stones[rotated(n, deg)].fills.push_back(Position{stones[n].fills[i].x, 7 - stones[n].fills[i].y});
+    int newy = stones[n].fills[i].x;
+    int newx = 7 - stones[n].fills[i].y;
+    stones[rotated(n, deg)].fills.push_back(Position{newy, newx});
+    stones[rotated(n, deg)].raw[newy][newx] = stones[n].raw[stones[n].fills[i].y][stones[n].fills[i].x];
   }
 
   if (deg != 270) {
@@ -107,8 +131,12 @@ void rotate_stone(int n, int deg) {
 
 void flip_stone(int n) {
   /* 石を反転させる */
+  init_stone(fliped(n));
   for (int i = 0; i < stones[n].fills.size(); ++i) {
-    stones[fliped(n)].fills.push_back(Position{stones[n].fills[i].y, 7 - stones[n].fills[i].x});
+    int newy = stones[n].fills[i].y;
+    int newx = 7 - stones[n].fills[i].x;
+    stones[fliped(n)].fills.push_back(Position{newy, newx});
+    stones[fliped(n)].raw[newy][newx] = stones[n].raw[stones[n].fills[i].y][stones[n].fills[i].x];
   }
 }
 
@@ -159,10 +187,30 @@ void get_input() {
   get_stones();
 }
 
+/* helper */
+void create_candidates(std::deque<Position>& next_candidates, int n, std::deque<Position>& empties) {
+  /* 石の埋まっている場所とフィールド上の候補から、次に石を置く可能性のある場所に置く*/
+  next_candidates.resize(empties.size() * stones[n].fills.size());
+  for (auto p1 : empties) {
+    for (auto p2 : stones[n].fills) {
+      next_candidates.push_back(Position{ p1.y - p2.y, p1.x - p2.x });
+    }
+  }
+}
 
+/* solver */
+void solve() {
+  /* とりあえずこれを呼んでsolveする */
+  std::deque<Position> first_candidates;
+  for (int i = 0; i < all_stones_num(); ++i) {
+    create_candidates(first_candidates, i, initial_empties); // 一個目の石を置く場所の候補を生成
+  }
+}
 
 /* main */
 int main() {
+  initial_empties.resize(1024);
   get_input();
-  dump_field(initial_field);
+  // dump_field(initial_field);
+  // solve();
 }

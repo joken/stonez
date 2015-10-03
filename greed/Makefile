@@ -1,2 +1,2 @@
 all: greed.cpp
-	g++ greed.cpp -o greed -std=c++11
+	g++ greed.cpp -o solver -std=c++11
