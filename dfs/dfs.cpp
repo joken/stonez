@@ -4,6 +4,7 @@
 #include <queue>
 #include <deque>
 #include <string>
+#include <algorithm>
 #include <sstream>
 
 const int stone_size = 8;
@@ -11,6 +12,9 @@ const int field_size = 32;
 
 struct Position{
   int y, x;
+  bool operator==(const Position&obj) const {
+    return y == obj.y && x == obj.x;
+  }
 };
 struct Stone {
   int raw[stone_size][stone_size];
@@ -45,6 +49,7 @@ const int rot[] = {0, 256, 512, 768};
 Field initial_field;
 int number_of_stones;
 const int empty_val = -1;
+const int filled_val = 256;
 
 std::string to_string(int n) {
 	std::stringstream ss;
@@ -61,18 +66,13 @@ void read_br() {
 };
 
 void get_field() {
-  for (int i = 0; i < stone_size; ++i) {
-    for (int j = 0; j < field_size; ++j) {
-      initial_field.raw[i][j] = 256;
-    }
-  }
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
       if (get() == 0) {
         initial_field.raw[i][j] = empty_val;
         initial_field.empties.push_back(Position{i, j});
       } else {
-        initial_field.raw[i][j] = 257;
+        initial_field.raw[i][j] = filled_val;
       }
     }
     read_br();
@@ -123,10 +123,34 @@ void get_input() {
   get_stones();
 }
 
+void dump_field(Field &f, std::vector<Position>& ps) {
+  for (int i = 0; i < field_size; ++i) {
+    for (int j = 0; j < field_size; ++j) {
+      if (std::find(ps.begin(), ps.end(), Position{i, j}) != ps.end()) {
+        putc('_', stdout);
+      } else if (f.raw[i][j] == empty_val) {
+        putc('.', stdout);
+      } else if (f.raw[i][j] == filled_val) {
+        putc('#', stdout);
+      } else {
+        putc('@', stdout);
+      }
+      // printf("%d", f.raw[i][j] != empty_val);
+    }
+    printf("\n");
+  }
+}
 void dump_field(Field &f) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      printf("%d", f.raw[i][j] != empty_val);
+      if (f.raw[i][j] == empty_val) {
+        putc('.', stdout);
+      } else if (f.raw[i][j] == filled_val) {
+        putc('#', stdout);
+      } else {
+        putc('@', stdout);
+      }
+      // printf("%d", f.raw[i][j] != empty_val);
     }
     printf("\n");
   }
@@ -233,11 +257,13 @@ int main() {
   get_input();
   dump_stone(stones[0]);
   int rot_buf[] = {0, 90, 180, 270};
-  for (auto && s : stones[0].fills) {
-    for (auto && f : initial_field.empties) {
-      for (int k = 0; k < 4; ++k) {
-        solve(initial_field, Position{f.y - s.y, f.x - s.x}, 0, rot_buf[k], 0, 0);
-        solve(initial_field, Position{f.y - s.y, f.x - s.x}, 1, rot_buf[k], 0, 0);
+  for (int i = 0; i < number_of_stones; ++i) {
+    for (auto && s : stones[i].fills) {
+      for (auto && f : initial_field.empties) {
+        for (int k = 0; k < 4; ++k) {
+          solve(initial_field, Position{f.y - s.y, f.x - s.x}, 0, rot_buf[k], i, 0);
+          solve(initial_field, Position{f.y - s.y, f.x - s.x}, 1, rot_buf[k], i, 0);
+        }
       }
     }
   }
