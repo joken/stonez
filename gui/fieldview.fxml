@@ -21,7 +21,7 @@
                 </Menu>
                 <Menu mnemonicParsing="false" text="Edit">
                   <items>
-                    <MenuItem mnemonicParsing="false" onAction="#onEditLaunch" text="Edit Field" />
+                    <MenuItem fx:id="FieldEditLauncher" disable="true" mnemonicParsing="false" onAction="#onEditLaunch" text="Edit Field" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">
@@ -54,7 +54,7 @@
                         <Insets left="10.0" />
                      </HBox.margin>
                   </Button>
-                  <Button fx:id="AnswerTypeBtn" mnemonicParsing="false" onAction="#onAnswerTyped" text="Done" visible="false">
+                  <Button fx:id="AnswerTypeBtn" disable="true" mnemonicParsing="false" onAction="#onAnswerTyped" text="Done" visible="false">
                      <HBox.margin>
                         <Insets left="5.0" />
                      </HBox.margin>

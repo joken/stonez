@@ -1,14 +1,21 @@
 package com.procon.gui;
 
+import java.util.ArrayList;
+
 import com.procon.gui.Field.ZukuState;
 
 /**
- * 回転、裏返しのプロパティをもつ
+ * 回転、裏返し,全石情報のプロパティをもつ
  * 座標設定も可能
  * */
 public class Stone {
+	private ArrayList<ZukuState[][]> stones;//問題から吸った全石情報
 	private short rotated;//回転
 	private short reversed;//裏返し
+
+	Stone(ArrayList<ZukuState[][]> stone){
+		stones = stone;
+	}
 
 	public void rotate(){
 		rotated++;
@@ -39,14 +46,27 @@ public class Stone {
 		return reversed;
 	}
 
-	public void setPosition(ZukuState[][] z,int x, int y){
+	/*public void setPosition(ZukuState[][] z,int x, int y){
 		int curX = 0,curY = 0;
 		for (int i = 0; i < Field.STONE_SIZE; i++) {
 			for (int j = 0; j < Field.STONE_SIZE; j++) {
-				curX = j * Field.ZUKU_SIZE;
-				curY = i * Field.ZUKU_SIZE;
-				z[j][i].setXY(x + curX, y + curY);
+				curX = j * Field.ZUKU_SIZE + x;
+				curY = i * Field.ZUKU_SIZE + y;
+				z[j][i].setXY(curX, curY);
 			}
+		}
+	}*/
+
+	/**
+	 * 石情報を返す
+	 * @param index 石番号
+	 * @return 石情報 格納されてない石番号を指定した場合null
+	 * */
+	public ZukuState[][] getStone(int index) {
+		if(index < stones.size() && index >= 0){
+			return stones.get(index);
+		}else{
+			return null;
 		}
 	}
 
