@@ -1,11 +1,13 @@
 package com.procon.gui;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+
 
 public class Field {
 	public static final int ZUKU_SIZE = 15;
@@ -14,20 +16,20 @@ public class Field {
 	public static final int FIELD_BASE = 50;
 
 	private ZukuState[][] zstate;
-	private ArrayList<ZukuState[][]> stones;
+	private Stone stones;
 
 	Field(){
 		zstate = new ZukuState[FIELD_SIZE][FIELD_SIZE];
-		stones = new ArrayList<ZukuState[][]>();
 	}
 
 	//石の状態
 	public enum ZukuState{
 		  NONE(0),//からっぽ
 		  STONE(1),//石を置いてる
-		  OBSTACLE(2);//最初からある障害物
+		  OBSTACLE(2),//最初からある障害物
+		  TRANSPARENCY(3);
 
-		  private int state;//JavaFXのRectangle
+		  private Color state;//色情報
 		  private int X,Y;//座標値
 
 		  private ZukuState(int id){
@@ -37,20 +39,23 @@ public class Field {
 		  private void setstate(int id) {
 			  switch(id){
 		      case 0:
-		        state = Integer.parseInt("FFFFFF", 16);//白色
+		        state = new Color(0xFFFFFF);//白色
 		        break;
 		      case 1:
-		        state = Integer.parseInt("005AFF", 16);//青色
+		        state = new Color(0x005AFF);//青色
 		        break;
 		      case 2:
-		    	state = Integer.parseInt("000000", 16);//黒色
+		    	state = new Color(0x000000);//黒色
 		        break;
+		      case 3:
+		    	  state = new Color(0xFFFFFFF, true);//白色(透明)
+		    	  break;
 		      default:
-		    	  state = Integer.parseInt("9E0099", 16);//むらさき
+		    	  state = new Color(0x9E0099);//むらさき
 			    }
 			}
 
-		public int getState(){
+		public Color getState(){
 			return state;
 		}
 
@@ -78,7 +83,7 @@ public class Field {
 
 	public ZukuState[][] getField(){return zstate;}
 
-	public ArrayList<ZukuState[][]> getStones(){return stones;}
+	public Stone getStones(){return stones;}
 
 	public void setField(ZukuState[][] z){
 		synchronized(this){
@@ -133,10 +138,11 @@ public class Field {
 		int StoneCount = Integer.parseUnsignedInt
 				(String.valueOf(suiren));
 		suiren = null;
+		ArrayList<ZukuState[][]> stone = new ArrayList<ZukuState[][]>();
 		synchronized (this) {
 			for (int i = 0; i < StoneCount; i++) {//石情報取得
-				stones.add(new ZukuState[STONE_SIZE][STONE_SIZE]);
-				ZukuState[][] z = stones.get(i);
+				stone.add(new ZukuState[STONE_SIZE][STONE_SIZE]);
+				ZukuState[][] z = stone.get(i);
 				for (int j = 0; j < STONE_SIZE; j++) {
 					do {
 						suiren = in.readLine();
@@ -148,11 +154,12 @@ public class Field {
 							z[k][j] = ZukuState.STONE;
 							break;
 						default:
-							z[k][j] = ZukuState.NONE;
+							z[k][j] = ZukuState.TRANSPARENCY;
 						}
 					}
 				}
 			}
+			stones = new Stone(stone);
 		}
 		return data.toString();
 	}

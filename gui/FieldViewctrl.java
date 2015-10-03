@@ -1,5 +1,6 @@
 package com.procon.gui;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -8,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -27,6 +29,7 @@ public class FieldViewctrl {
 	@FXML private Pane FieldPane;
 	@FXML private Button FormatSwitcher,AnswerTypeBtn;
 	@FXML private TextArea AnswerArea;
+	@FXML private MenuItem FieldEditLauncher;
 
 	public void setStage(Stage s){
 		FieldViewStage = s;
@@ -107,11 +110,14 @@ public class FieldViewctrl {
 								(f.getAbsolutePath()));
 								SetField();
 								state.setText("done");
+								this.FieldEditLauncher.setDisable(false);
+								this.AnswerTypeBtn.setDisable(false);
 							} catch (Exception e2) {
 								// TODO: handle exception
 								e2.printStackTrace();
 								state.setText("Error : "
 								+ e2.toString());
+								e.consume();
 							}
 						}else{
 							state.setText("load faild : "
@@ -136,7 +142,7 @@ public class FieldViewctrl {
 	private void SetField(){
 		//デバッグようにつかってね
 		//(Setしたりとかし)ないです。
-		ArrayList<Integer> r = new ArrayList<Integer>();
+		ArrayList<Color> r = new ArrayList<Color>();
 		ZukuState[][] F = FieldView.field.getField();
 		for(int i = 0; i < Field.FIELD_SIZE; i++){
 			for(int j = 0; j < Field.FIELD_SIZE; j++){
