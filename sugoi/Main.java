@@ -1,19 +1,17 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException {
-		File file = new File("C:/hdd/Documents/Projects/stonez/sugoi/quest9.txt");
+		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest1.txt");
 
 		long t0 = System.currentTimeMillis();
 		// --------------
 
-		Problem problem = new Problem(new Scanner(file));
-		List<HashSet<Integer>> result = problem.getFieldMemo();
+		Solver solver = new Solver(new Scanner(file));
+
 
 		// --------------
 		long t1 = System.currentTimeMillis();
@@ -25,8 +23,10 @@ public class Main {
 //			}
 //			System.out.println();
 //		}
-
-		System.out.println("TIME: " + (t1 - t0));
+		System.out.println(solver.dumpField());
+		System.out.println("SCORE: " + solver.getScore());
+		System.out.println("COUNT: " + solver.countPlacedStones());
+		System.out.println("TIME : " + (t1 - t0));
 	}
 
 }

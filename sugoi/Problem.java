@@ -1,5 +1,8 @@
+import java.io.PrintStream;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
@@ -8,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * 神クラス
  */
-public class Problem {
+public class Solver {
 
 	private static final int SIZE_FIELD = 32;
 	private static final int SIZE_STONE = 8;
@@ -31,24 +34,47 @@ public class Problem {
 	/** 石 i に操作 j を行った行 k の構成 */
 	private int[][][] stones;
 
-	/** 石 i に操作 j を行ったものを置くことができる敷地の行  k + OFFSET_FIELD の列の l 番目の位置 - OFFSET_FIELD */
+	/** 石 i に操作 j を行ったものを置くことができる敷地の行  k + OFFSET_FIELD の列の l 番目の位置 */
 	private int[][][][] candidates_stone;
-	/** 石 i に操作 j を行ったものをおいた敷地の行  k + OFFSET_FIELD の列の(位置 - OFFSET_FIELD) null許容 */
-	private Integer[][][] stones_put;
+	/** 敷地の行 i の列 j に置くことができる石のリスト */
+	private StoneBucket[][] stones_puttable;
+	/** 石 i をおいたもの null許容 */
+	private List<PlacedStone> stones_put;
+	/** 次に置くことができる石の候補 */
+	private int[][][][] neighbors;
 
-	class Operation {
-		public static final int NORMAL = 0;
-		public static final int ROTATE90 = 1;
-		public static final int ROTATE180 = 2;
-		public static final int ROTATE270 = 3;
-		public static final int FLIP = 4;
-		public static final int COUNT = 8;
+	private class Operation {
+		static final int NORMAL = 0;
+		static final int ROTATE90 = 1;
+		static final int ROTATE180 = 2;
+		static final int ROTATE270 = 3;
+		static final int FLIP = 4;
+		static final int COUNT = 8;
 	}
 
-	public Problem(Scanner in) {
+	public Solver(Scanner in) {
+		// 読み込み
+		printWithTime("parsing...", System.out);
 		parse(in);
+		// 石の候補を探す
+		printWithTime("seeking candidates...", System.out);
 		seekCandidates();
-		solve(0);
+		// 解く
+		printWithTime("solving...", System.out);
+		solve();
+
+		for (int i_field = 0; i_field < SIZE_FIELD; i_field++) {
+			for (int value = 0; value < SIZE_FIELD; value++) {
+				System.out.print(String.format("%6d", stones_puttable[i_field][value].size()).replace("    0", "    -"));
+			}
+			System.out.println();
+		}
+
+		printWithTime("done.", System.out);
+	}
+
+	private void printWithTime(String message, PrintStream out) {
+		out.printf("%s: %s\r\n", new Time(System.currentTimeMillis()), message);
 	}
 
 	private void parse(Scanner in) {
@@ -72,7 +98,9 @@ public class Problem {
 		num_zk_stone_line = new int[num_stones][Operation.COUNT][SIZE_STONE];
 		stones = new int[num_stones][Operation.COUNT][SIZE_STONE];
 		candidates_stone = new int[num_stones][Operation.COUNT][SIZE_FIELD + OFFSET_FIELD][];
-		stones_put = new Integer[num_stones][Operation.COUNT][SIZE_FIELD + OFFSET_FIELD];
+		stones_puttable = new StoneBucket[SIZE_FIELD][SIZE_FIELD];
+		stones_put = new ArrayList<PlacedStone>(num_stones);
+		neighbors = new int[num_stones][Operation.COUNT][SIZE_FIELD + OFFSET_FIELD][];
 		// 空行を読む
 		in.nextLine();
 		// 石を読む
@@ -116,7 +144,7 @@ public class Problem {
 //			for (int op = 0; op < Operation.COUNT; op++) {
 //				for (int j = 0; j < SIZE_STONE; j++) {
 //					System.out
-//							.printf("STONE %d: OP %d: %8s %d\n", i, op,
+//							.printf("STONE %d: OP %d: %8s %d\r\n", i, op,
 //									Integer.toBinaryString(stones[i][op][j])
 //											.replace("0", " "), num_zk_stone_line[i][op][j]);
 //				}
@@ -131,16 +159,62 @@ public class Problem {
 	}
 
 	private void seekCandidates() {
+		// 準備
+		for (StoneBucket[] line : stones_puttable) {
+			for (int i = 0; i < SIZE_FIELD; i++) {
+				line[i] = new StoneBucket(SIZE_FIELD);
+			}
+		}
+		// 探す
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
-//			System.out.println("\n-----------\nSTONE " + i_stone);
+//			System.out.println("\r\n-----------\r\nSTONE " + i_stone);
 			for (int op = 0; op < Operation.COUNT; op++) {
-//				System.out.println("\nOP " + op);
+//				System.out.println("\r\nOP " + op);
 				for (int i_field = - OFFSET_FIELD; i_field < SIZE_FIELD; i_field++) {
-					List<Integer> indexes = indexesPuttable(i_field, i_stone, op, 0);
-					for (int j_stone = 1; j_stone < SIZE_STONE; j_stone++) {
-						indexes.retainAll(indexesPuttable(i_field + j_stone, i_stone, op, j_stone));
+					// おける位置を探す
+					List<Integer> indexes = null;
+					for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+						if (stones[i_stone][op][j_stone] == 0) {
+							continue;
+						}
+						if (indexes == null) {
+							indexes = indexesPuttable(i_field + j_stone, i_stone, op, j_stone);
+						} else {
+							indexes.retainAll(indexesPuttable(i_field + j_stone, i_stone, op, j_stone));
+						}
 					}
-					candidates_stone[i_stone][op][i_field + OFFSET_FIELD] = indexes.stream().mapToInt(i -> i).toArray();
+					// 格納
+					int index_i_field = i_field + OFFSET_FIELD;
+					candidates_stone[i_stone][op][index_i_field] = indexes.stream()
+						.mapToInt(i -> i)
+						.toArray();
+					// 位置をキーに石を探せるようにする
+					for (int value : candidates_stone[i_stone][op][index_i_field]) {
+						// これを入れる
+						PlacedStone stone = new PlacedStone(i_stone, op, i_field, value);
+//						System.out.println(stone);
+						// 石の構成をなぞる
+						for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+							int ii = i_field + j_stone;
+							int line = stones[i_stone][op][j_stone];
+							if (line == 0) {
+								continue;
+							}
+							for (int v = 0; v < SIZE_STONE; v++) {
+								if (((line >> (OFFSET_FIELD - v)) & 1) == 1) {
+									int iv = value + v;
+									if (ii >= 0 && ii < SIZE_FIELD && iv >= 0 && iv < SIZE_FIELD) {
+										stones_puttable[ii][iv].add(stone);
+									}
+								}
+							}
+						}
+					}
+
+
+//					if (candidates_stone[i_stone][op][i_field + OFFSET_FIELD].length > 0) {
+//						System.out.printf("\nSTONE %d, OP %d\r\n", i_stone, op);
+//					}
 //					for (int value : candidates_stone[i_stone][op][i_field + OFFSET_FIELD]) {
 //						System.out.printf("(%2d, %2d)", value, i_field);
 //					}
@@ -149,6 +223,13 @@ public class Problem {
 //					}
 				}
 			}
+		}
+//		System.out.println(stones_puttable[6][6]);
+		for (int i_field = 0; i_field < SIZE_FIELD; i_field++) {
+			for (int value = 0; value < SIZE_FIELD; value++) {
+				System.out.print(String.format("%6d", stones_puttable[i_field][value].size()).replace("    0", "    -"));
+			}
+			System.out.println();
 		}
 	}
 
@@ -162,16 +243,16 @@ public class Problem {
     		return indexes;
     	}
     	for (int i = 1; i < SIZE_STONE; i++) {
-//    		System.out.printf("%39s\n", Long.toBinaryString(field[i_field]).replace("0", " "));
-//    		System.out.printf("%39s\n", Long.toBinaryString((long) stones[i_stone][op][j_stone] >>> i).replace("0", " "));
+//    		System.out.printf("%39s\r\n", Long.toBinaryString(field[i_field]).replace("0", " "));
+//    		System.out.printf("%39s\r\n", Long.toBinaryString((long) stones[i_stone][op][j_stone] >>> i).replace("0", " "));
     		if (Long.bitCount(field[i_field] & ((long) stones[i_stone][op][j_stone] >>> i)) == num_zk_stone_line[i_stone][op][j_stone]) {
     			indexes.add(SIZE_FIELD - SIZE_STONE + i);
 //    			System.out.println(SIZE_FIELD - SIZE_STONE + i);
     		}
     	}
     	for (int i = 0; i < SIZE_FIELD; i++) {
-//    		System.out.printf("%39s\n", Long.toBinaryString(field[i_field]).replace("0", " "));
-//    		System.out.printf("%39s\n", Long.toBinaryString((long) stones[i_stone][op][j_stone] << i).replace("0", " "));
+//    		System.out.printf("%39s\r\n", Long.toBinaryString(field[i_field]).replace("0", " "));
+//    		System.out.printf("%39s\r\n", Long.toBinaryString((long) stones[i_stone][op][j_stone] << i).replace("0", " "));
     		if (Long.bitCount(field[i_field] & ((long) stones[i_stone][op][j_stone] << i)) == num_zk_stone_line[i_stone][op][j_stone]) {
     			indexes.add(SIZE_FIELD - SIZE_STONE - i);
 //    			System.out.println(SIZE_FIELD - SIZE_STONE - i);
@@ -180,14 +261,54 @@ public class Problem {
     	return indexes;
 	}
 
-    /** stone_begin 個目よりあとの石を最初において解く */
-	private void solve(int stone_begin) {
-		for (int i_stone = stone_begin; i_stone < num_stones; i_stone++) {
+    /** 解く */
+	private void solve() {
+		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
 			for (int op = 0; op < Operation.COUNT; op++) {
 				for (int i_field = - OFFSET_FIELD; i_field < SIZE_FIELD; i_field++) {
-					int[] values = candidates_stone[i_stone][op][i_field + OFFSET_FIELD];
-					for (int i = 0; i < values.length; i++) {
-						put(i_stone, op, i_field, values[i]);
+					// 候補の更新を考慮したループ
+					for (int i = 0; ; i++) {
+						if (i >= candidates_stone[i_stone][op][i_field + OFFSET_FIELD].length) {
+							break;
+						}
+						int value = candidates_stone[i_stone][op][i_field + OFFSET_FIELD][i];
+						put(i_stone, op, i_field, value);
+
+						addNeighbors(i_stone, op, i_field, value);
+
+						System.out.println(dumpField());
+
+						int count = 0;
+						for (int i_stone_count = 0; i_stone_count < num_stones; i_stone_count++) {
+							for (int op_count = 0; op_count < Operation.COUNT; op_count++) {
+								for (int i_field_count = -OFFSET_FIELD; i_field_count < SIZE_FIELD; i_field_count++) {
+									if (neighbors[i_stone_count][op_count][i_field_count + OFFSET_FIELD] == null) {
+										continue;
+									}
+									count += neighbors[i_stone_count][op_count][i_field_count + OFFSET_FIELD].length;
+								}
+							}
+						}
+						System.out.println("NEIGHBORS: " + count);
+//						if (neighbors[i_stone][op][i_field + OFFSET_FIELD] != null &&
+//								neighbors[i_stone][op][i_field + OFFSET_FIELD].length > 0) {
+//							System.out.printf("\nSTONE %d, OP %d\r\n", i_stone, op);
+//						}
+//						for (int i_stone_print = 0; i_stone_print < num_stones; i_stone_print++) {
+//							for (int op_print = 0; op_print < Operation.COUNT; op_print++) {
+//								for (int i_field_print = -OFFSET_FIELD; i_field_print < SIZE_FIELD; i_field_print++) {
+//									if (neighbors[i_stone_print][op_print][i_field_print + OFFSET_FIELD] == null) {
+//										continue;
+//									}
+//									for (int v : neighbors[i_stone_print][op_print][i_field_print + OFFSET_FIELD]) {
+//										System.out.printf("%d (%2d, %2d) ", i_stone_print, v, i_field_print);
+//									}
+//									if (neighbors[i_stone_print][op_print][i_field_print + OFFSET_FIELD].length > 0) {
+//										System.out.println();
+//									}
+//								}
+//							}
+//						}
 					}
 				}
 			}
@@ -196,31 +317,215 @@ public class Problem {
 
 	private void put(int i_stone_put, int op_put, int i_field_put, int value_put) {
 		// 置く
-		stones_put[i_stone_put][op_put][i_field_put] = value_put;
+		stones_put.add(new PlacedStone(i_stone_put, op_put, i_field_put, value_put));
+		// 置いた石を候補から消す
+		for (int op = 0; op < Operation.COUNT; op++) {
+			removeCandidate(i_stone_put, op);
+		}
+//		for (int i_field = 0; i_field < SIZE_FIELD; i_field++) {
+//			for (int value = 0; value < SIZE_FIELD; value++) {
+//				if (stones_puttable[i_field][value].size() == 0) {
+//					continue;
+//				}
+//				stones_puttable[i_field][value].remove(i_stone_put, op_put);
+//			}
+//		}
 		// 置いた石にかぶっている石を石候補から消す
+		HashMap<Integer, Integer> pairs = new HashMap<Integer, Integer>();
+		for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+			int line = stones[i_stone_put][op_put][j_stone];
+			if (line == 0) {
+				continue;
+			}
+			int index_i_field_put = i_field_put + j_stone;
+			for (int value = 0; value < SIZE_STONE; value++) {
+				if (((line >> (OFFSET_FIELD - value)) & 1) == 1) {
+					int index_value_put = value_put + value;
+					// 候補を削除
+					for (PlacedStone stone : stones_puttable[index_i_field_put][index_value_put].getStones()) {
+						removeCandidate(stone.getIStone(), stone.getOp(), stone.getIField(), stone.getValue());
+					}
+				}
+			}
+		}
+
+	}
+
+	private void addNeighbors(int i_stone_me, int op_me, int i_field_me, int value_me) {
+		// 膨張処理をして輪郭をとる
+		int[] work = new int[SIZE_STONE + 2];
+		for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+			work[j_stone + 0] |= stones[i_stone_me][op_me][j_stone] << 1;
+			work[j_stone + 1] |= stones[i_stone_me][op_me][j_stone] | stones[i_stone_me][op_me][j_stone] << 2;
+			work[j_stone + 2] |= stones[i_stone_me][op_me][j_stone] << 1;
+		}
+		for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+			work[j_stone + 1] &= ~ (stones[i_stone_me][op_me][j_stone] << 1);
+		}
+		// 石候補から輪郭にかぶるものを返す
+		for (int j_work = 0; j_work < work.length; j_work++) {
+			int line = work[j_work];
+			if (line == 0) {
+				continue;
+			}
+			int index_i_field_put = i_field_me + j_work + 1;
+			if (index_i_field_put >= SIZE_FIELD) {
+				continue;
+			}
+			for (int value_work = 0; value_work < work.length; value_work++) {
+				if (((line >> (work.length - 1 - value_work)) & 1) == 1) {
+					int index_value_put = value_me + value_work + 1;
+					if (index_value_put >= SIZE_FIELD) {
+						continue;
+					}
+					for (PlacedStone stone : stones_puttable[index_i_field_put][index_value_put].getStones()) {
+						int i_stone = stone.getIStone();
+						int op = stone.getOp();
+						int index_i_field = stone.getIField() + OFFSET_FIELD;
+						if (candidates_stone[i_stone][op][index_i_field] == null ||
+							Arrays.stream(candidates_stone[i_stone][op][index_i_field])
+								.anyMatch(value -> value != stone.getValue())) {
+							continue;
+						}
+
+
+
+						int[] values = neighbors[i_stone][op][index_i_field];
+
+
+						if (values == null) {
+							neighbors[i_stone][op][index_i_field] = new int[1];
+							neighbors[i_stone][op][index_i_field][0] = stone.getValue();
+							continue;
+						}
+
+						for (int v : values) {
+							System.out.printf("(%2d, %2d) (%2d, %2d)\r\n", i_field_me, value_me, v, stone.getIField());
+						}
+
+						List<Integer> list = Arrays.stream(values)
+							.boxed()
+							.collect(Collectors.toList());
+						list.add(stone.getValue());
+						neighbors[i_stone][op][index_i_field] = list.stream()
+							.mapToInt(i -> i)
+							.distinct()
+							.toArray();
+					}
+				}
+			}
+		}
+	}
+
+	private void removeCandidate(int i_stone_rem, int op_rem) {
+		removeCandidate(candidates_stone, i_stone_rem, op_rem);
+		removeCandidate(neighbors, i_stone_rem, op_rem);
+	}
+
+	private void removeCandidate(int i_stone_rem, int op_rem, int i_field_rem, int value_rem) {
+		removeCandidates(candidates_stone, i_stone_rem, op_rem, i_field_rem, value_rem);
+		removeCandidates(neighbors, i_stone_rem, op_rem, i_field_rem, value_rem);
+	}
+
+	private void removeCandidate(int[][][][] candidates, int i_stone_rem, int op_rem) {
+		for (int index_i_field = 0; index_i_field < SIZE_FIELD + OFFSET_FIELD; index_i_field++) {
+			candidates[i_stone_rem][op_rem][index_i_field] = new int[0];
+		}
+	}
+
+	private void removeCandidates(int[][][][] candidates, int i_stone_rem, int op_rem, int i_field_rem, int value_rem) {
+		int[] values = candidates[i_stone_rem][op_rem][i_field_rem + OFFSET_FIELD];
+		if (values == null) {
+			return;
+		}
+		candidates[i_stone_rem][op_rem][i_field_rem + OFFSET_FIELD] = Arrays.stream(values)
+				.filter(value -> value != value_rem)
+				.toArray();
+	}
+
+	public String dumpField() {
+		char[][] chars = new char[SIZE_FIELD][];
+		char char_obstacle = ' ';
+		char char_free = '.';
+		char char_stone = '#';
+		char char_stone_multi = '2';
+		char char_invalid = 'X';
+
+		for (int i_field = 0; i_field < SIZE_FIELD; i_field++) {
+			long line = field[i_field];
+			line = (~ line) & 0xffffffffL;
+			String content = String.format("%32s", Long.toBinaryString(line)).replace(' ', '0');
+			content = content.replace('1', char_obstacle).replace('0', char_free);
+			content += "\r\n";
+			chars[i_field] = content.toCharArray();
+		}
+		for (PlacedStone stone : stones_put) {
+//			System.out.println(stone);
+			int[] lines = stone.getStone(stones);
+			for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+//				System.out.println("LINE: " + lines[j_stone]);
+				if (lines[j_stone] == 0) {
+					continue;
+				}
+				for (int value = 0; value < SIZE_STONE; value++) {
+					if (((lines[j_stone] >> (OFFSET_FIELD - value)) & 1) == 1) {
+						int i = stone.getIField() + j_stone;
+						int v = stone.getValue() + value;
+						if (chars[i][v] == char_stone) {
+							chars[i][v] = char_stone_multi;
+							continue;
+						}
+						chars[i][v] = (chars[i][v] == char_obstacle | chars[i][v] == char_invalid) ? char_invalid : char_stone;
+					}
+				}
+			}
+		}
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
 			for (int op = 0; op < Operation.COUNT; op++) {
-				for (int i = i_field_put - OFFSET_FIELD; i < i_field_put + OFFSET_FIELD; i++) {
-					for (int j = value_put - OFFSET_FIELD; j < value_put + OFFSET_FIELD; j++) {
-						if (isCollide(i_stone_put, op_put, i_field_put, value_put, i_stone, op, i, j)) {
-							removeCandidate(i_stone, op, i, j);
+				int[] lines = stones[i_stone][op];
+				for (int i_field = - OFFSET_FIELD; i_field < SIZE_FIELD; i_field++) {
+					if (neighbors[i_stone][op][i_field + OFFSET_FIELD] == null) {
+						continue;
+					}
+					for (int value : neighbors[i_stone][op][i_field + OFFSET_FIELD]) {
+						for (int j_stone = 0; j_stone < SIZE_STONE; j_stone++) {
+							for (int val = 0; val < SIZE_STONE; val++) {
+								if (((lines[j_stone] >> (OFFSET_FIELD - val)) & 1) == 1) {
+									int i = i_field + j_stone;
+									int v = value + val;
+									if (i < 0 || i >= SIZE_FIELD || v < 0 || v >= chars[i].length) {
+										continue;
+									}
+									try {
+										chars[i][v] = '^';
+									} catch (Exception e) {
+										System.out.printf("(%2d, %2d)\r\n", v, i);
+										e.printStackTrace();
+//										System.exit(1);
+									}
+								}
+							}
 						}
 					}
 				}
 			}
 		}
-		// 置いた石に隣接している石を石配置候補に加える
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("  0123456789ABCDEF0123456789ABCDEF\r\n");
+		for (int i_field = 0; i_field < SIZE_FIELD; i_field++) {
+			sb.append(String.format("%2X ", i_field).substring(1));
+			sb.append(chars[i_field]);
+		}
+		return sb.toString();
 	}
 
-	private void removeCandidate(int i_stone_rem, int op_rem, int i_rem, int j_rem) {
-
-
+	public int getScore() {
+		return Arrays.stream(dumpField().split("[^.]+")).mapToInt(str -> str.length()).sum();
 	}
 
-	private boolean isCollide(int i_stone_a, int op_a, int i_field_a,
-			int value_a, int i_stone_b, int op_b, int i_field_b, int value_b) {
-
-		return false;
+	public int countPlacedStones() {
+		return stones_put.size();
 	}
 
 	public List<HashSet<Integer>> getFieldMemo() {
