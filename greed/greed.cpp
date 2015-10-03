@@ -42,13 +42,35 @@ Stone stones[256 * 8]; // 石を持っておくインスタンス（回転反転
 Field initial_field; // 初期フィールド状態
 std::deque<Position> initial_empties; // 初期フィールドで空いている場所を探す
 
+int rotated(int deg) {
+  /* 石をdeg度まわした石の番号のバイアスを返す */
+  return number_of_stones * (deg/90);
+}
+int fliped() {
+  /* 石を反転した時の石の番号のバイアスを返す */
+  return number_of_stones * 4;
+}
+int operated(bool flip, int deg) {
+  /* 石を操作した時の石の番号のバイアスを返す */
+  if (flip) {
+    if (deg == 0) {
+      return fliped();
+    }
+    return fliped() + rotated(deg);
+  }
+  return rotated(deg);
+}
 int rotated(int n, int deg) {
-  /* n番の石をdeg度まわした石の番号を返す */
-  return n + number_of_stones * (deg/90);
+  /* 石をdeg度まわした石の番号を返す */
+  return n + rotated(deg);
 }
 int fliped(int n) {
-  /* n番の石を反転した時の石の番号を返す */
-  return n + number_of_stones * 4;
+  /* 石を反転した時の石の番号を返す */
+  return n + fliped();
+}
+int operated(int n, bool flip, int deg) {
+  /* 石を操作した時の石の番号のバイアスを返す */
+  return n + operated(flip, deg);
 }
 int all_stones_num() {
   /* 全部で石が何個になるか */
@@ -199,10 +221,19 @@ void create_candidates(std::deque<Position>& next_candidates, int n, std::deque<
 }
 
 /* solver */
+void dfs(int n, bool fliped, int deg, Position p, Field& f) {
+  /* n番の石をfliped + degの状態で、f上のpに置くところから深く */
+  if (n >= number_of_stones) {
+    return;
+  }
+
+  int m = operated(n, fliped, deg);
+
+}
 void solve() {
   /* とりあえずこれを呼んでsolveする */
   std::deque<Position> first_candidates;
-  for (int i = 0; i < all_stones_num(); ++i) {
+  for (int i = 0; i < number_of_stones; ++i) {
     create_candidates(first_candidates, i, initial_empties); // 一個目の石を置く場所の候補を生成
   }
 }
