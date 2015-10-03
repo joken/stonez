@@ -221,6 +221,10 @@ void create_candidates(std::deque<Position>& next_candidates, int n, std::deque<
 }
 
 /* solver */
+int put_stone(int n, Field& f, std::deque<Position>& next_candidates) {
+
+  return 0;
+}
 void dfs(int n, bool fliped, int deg, Position p, Field& f) {
   /* n番の石をfliped + degの状態で、f上のpに置くところから深く */
   if (n >= number_of_stones) {
@@ -228,13 +232,23 @@ void dfs(int n, bool fliped, int deg, Position p, Field& f) {
   }
 
   int m = operated(n, fliped, deg);
+  std::deque<Position> next_candidates;
 
+  if (put_stone(m, f, next_candidates) > 0) {
+  }
 }
 void solve() {
   /* とりあえずこれを呼んでsolveする */
-  std::deque<Position> first_candidates;
+  std::deque<Position> first_candidates; // 最初の石を置く場所
   for (int i = 0; i < number_of_stones; ++i) {
-    create_candidates(first_candidates, i, initial_empties); // 一個目の石を置く場所の候補を生成
+    for (int j = 0; j <= 270; j += 90) { // 回転
+      for (bool k = false; !k; k = true) { // 反転
+        create_candidates(first_candidates, operated(i, k, j), initial_empties); // 一個目の石を置く場所の候補を生成
+        for (auto p : first_candidates) {
+          dfs(i, k, j, p, initial_field);
+        }
+      }
+    }
   }
 }
 
