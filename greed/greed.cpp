@@ -222,7 +222,19 @@ void create_candidates(std::deque<Position>& next_candidates, int n, std::deque<
 }
 
 bool pos_check(int y, int x) {
+  /* 与えられた座標が、fieldからはみ出ていたらfalseを返す */
   return (0 <= y && y < field_size) && (0 <= x < field_size);
+}
+
+std::string create_answer_format(int n, bool flip, int deg, Position p) {
+  /* 石を置いた様子から回答フォーマットに沿った文字列を返す */
+  return to_s(p.x) + " " + to_s(p.y) + " " + (flip ? "T" : "H") + " " + to_s(deg);
+}
+
+void print_anser(Field& f) {
+  for (auto l : f.answer) {
+    printf("%s\n", l.c_str());
+  }
 }
 
 /* solver */
@@ -269,9 +281,24 @@ void dfs(int n, bool fliped, int deg, Position p, Field& f) {
   }
 
   int m = operated(n, fliped, deg);
-  std::deque<Position> next_candidates;
+  std::deque<Position> next_empties, next_candidates;
 
-  if (put_stone(m, p, f, next_candidates) > 0) {
+  if (put_stone(m, p, f, next_empties) > 0) {
+    /* 石を置いた時の処理 */
+    f.answer[n] = create_answer_format(n, fliped, deg, p);
+    print_anser(f);
+  }
+
+  /* 次の石を置く処理 */
+  for (int i = n + 1; i < number_of_stones; ++i) {
+    for (int j = 0; j <= 270; j += 90) { // 回転
+      for (bool k = false; !k; k = true) { // 反転
+        create_candidates(next_candidates, operated(i, k, j), next_empties); // 石を置く場所の候補を生成
+        for (auto p : next_candidates) {
+          dfs(i, k, j, p, f);
+        }
+      }
+    }
   }
 }
 void solve() {
@@ -293,6 +320,7 @@ void solve() {
 int main() {
   initial_empties.resize(1024);
   get_input();
+  initial_field.answer.resize(number_of_stones);
   // dump_field(initial_field);
   // solve();
 }
