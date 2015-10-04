@@ -110,6 +110,26 @@ void dump_stone(int n) {
   }
 }
 
+void dump_field(Field& f, std::deque<Position>& ps) {
+  for (int i = 0; i < field_size; ++i) {
+    for (int j = 0; j < field_size; ++j) {
+      if (std::find(ps.begin(), ps.end(), Position{i, j}) != ps.end()) {
+        /* 次の候補 */
+        putc('_', dumpout);
+      } else if (f.raw[i][j] == empty_val) {
+        /* あき */
+        putc('.', dumpout);
+      } else if (f.raw[i][j] == filled_val) {
+        /* 障害物 */
+        putc('#', dumpout);
+      } else {
+        /* 石 */
+        putc('@', dumpout);
+      }
+    }
+    putc('\n', dumpout);
+  }
+}
 void dump_field(Field& f) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
@@ -170,6 +190,7 @@ void get_field() {
     for (int j = 0; j < field_size; ++j) {
       if (get() == 0) {
         initial_field.raw[i][j] = empty_val;
+        initial_empties.push_back(Position{i, j});
       } else {
         initial_field.raw[i][j] = filled_val;
       }
@@ -213,7 +234,7 @@ void get_input() {
 /* helper */
 void create_candidates(std::deque<Position>& next_candidates, int n, std::deque<Position>& empties) {
   /* 石の埋まっている場所とフィールド上の候補から、次に石を置く可能性のある場所に置く*/
-  next_candidates.resize(empties.size() * stones[n].fills.size());
+  // next_candidates.resize(empties.size() * stones[n].fills.size());
   for (auto p1 : empties) {
     for (auto p2 : stones[n].fills) {
       next_candidates.push_back(Position{ p1.y - p2.y, p1.x - p2.x });
@@ -233,7 +254,7 @@ std::string create_answer_format(int n, bool flip, int deg, Position p) {
 
 void print_anser(Field& f) {
   for (auto l : f.answer) {
-    printf("%s\n", l.c_str());
+    printf("%s\r\n", l.c_str());
   }
 }
 
@@ -266,7 +287,10 @@ int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candida
     for (int i = 0; i < 4; ++i) {
       if (pos_check(y + dy[i], x + dx[i]) &&
           f.raw[y + dy[i]][x + dx[i]] == empty_val) {
-        next_candidates.push_back(Position{y+dy[i], x+dx[i]});
+        Position newpos{y+dy[i], x+dx[i]};
+        if (std::find(next_candidates.begin(), next_candidates.end(), newpos) == next_candidates.end()) {
+          next_candidates.push_back(newpos);
+        }
       }
     }
   }
@@ -274,28 +298,37 @@ int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candida
 
   return score;
 }
-void dfs(int n, bool fliped, int deg, Position p, Field& f) {
+void dfs(int nowscore, int n, bool fliped, int deg, Position p, Field f, std::deque<Position> next_empties) {
   /* n番の石をfliped + degの状態で、f上のpに置くところから深く */
   if (n >= number_of_stones) {
     return;
   }
 
   int m = operated(n, fliped, deg);
-  std::deque<Position> next_empties, next_candidates;
 
-  if (put_stone(m, p, f, next_empties) > 0) {
+  int score;
+
+  if ((score = put_stone(m, p, f, next_empties)) > 0) {
+    score += nowscore;
+    fprintf(stderr, "score - %d\n", score);
     /* 石を置いた時の処理 */
     f.answer[n] = create_answer_format(n, fliped, deg, p);
+
+    printf("score: %d\n", score);
+    dump_field(f, next_empties);
     print_anser(f);
+    fflush(dumpout);
   }
 
   /* 次の石を置く処理 */
-  for (int i = n + 1; i < number_of_stones; ++i) {
-    for (int j = 0; j <= 270; j += 90) { // 回転
-      for (bool k = false; !k; k = true) { // 反転
+  std::deque<Position> next_candidates;
+
+  for (int j = 0; j <= 270; j += 90) { // 回転
+    for (bool k = false; !k; k = true) { // 反転
+      for (int i = n + 1; i < number_of_stones; ++i) {
         create_candidates(next_candidates, operated(i, k, j), next_empties); // 石を置く場所の候補を生成
         for (auto p : next_candidates) {
-          dfs(i, k, j, p, f);
+         dfs(score, i, k, j, p, f, next_empties);
         }
       }
     }
@@ -304,12 +337,15 @@ void dfs(int n, bool fliped, int deg, Position p, Field& f) {
 void solve() {
   /* とりあえずこれを呼んでsolveする */
   std::deque<Position> first_candidates; // 最初の石を置く場所
-  for (int i = 0; i < number_of_stones; ++i) {
-    for (int j = 0; j <= 270; j += 90) { // 回転
-      for (bool k = false; !k; k = true) { // 反転
+  std::deque<Position> empty_positions;
+  empty_positions.empty();
+
+  for (int j = 0; j <= 270; j += 90) { // 回転
+    for (bool k = false; !k; k = true) { // 反転
+      for (int i = 0; i < number_of_stones; ++i) {
         create_candidates(first_candidates, operated(i, k, j), initial_empties); // 一個目の石を置く場所の候補を生成
         for (auto p : first_candidates) {
-          dfs(i, k, j, p, initial_field);
+          dfs(0, i, k, j, p, initial_field, empty_positions);
         }
       }
     }
@@ -318,9 +354,7 @@ void solve() {
 
 /* main */
 int main() {
-  initial_empties.resize(1024);
   get_input();
   initial_field.answer.resize(number_of_stones);
-  // dump_field(initial_field);
-  // solve();
+  solve();
 }
