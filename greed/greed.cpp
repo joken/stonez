@@ -2,6 +2,7 @@
 #include <vector>
 #include <deque>
 #include <string>
+#include <algorithm>
 #include <sstream>
 
 /* definitions */
@@ -220,10 +221,46 @@ void create_candidates(std::deque<Position>& next_candidates, int n, std::deque<
   }
 }
 
-/* solver */
-int put_stone(int n, Field& f, std::deque<Position>& next_candidates) {
+bool pos_check(int y, int x) {
+  return (0 <= y && y < field_size) && (0 <= x < field_size);
+}
 
-  return 0;
+/* solver */
+int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candidates) {
+  /* 石を置く処理。ついでに次に石を置けそうな場所を探す */
+  int score = 0;
+  Field backup = f;
+  for (auto p : stones[n].fills) { // zkごとにおけるかどうかを判定する
+    int y = base.y + p.y;
+    int x = base.x + p.x;
+    if (!pos_check(y, x) || f.raw[y][x] != empty_val) { // 置きたい場所が空いてないと置けない
+      next_candidates.clear();
+      f = backup;
+      return 0;
+    }
+
+    score += 1;
+    f.raw[y][x] = n;
+
+    /* 置いたところは候補から外す */
+    auto exists = std::find(next_candidates.begin(), next_candidates.end(), Position{y, x});
+    if (exists != next_candidates.end()) {
+      next_candidates.erase(exists);
+    }
+
+    /* 隣接している空きマスを次の候補に */
+    int dy[] = {-1, 0, 0, 1};
+    int dx[] = {0, -1, 1, 0};
+    for (int i = 0; i < 4; ++i) {
+      if (pos_check(y + dy[i], x + dx[i]) &&
+          f.raw[y + dy[i]][x + dx[i]] == empty_val) {
+        next_candidates.push_back(Position{y+dy[i], x+dx[i]});
+      }
+    }
+  }
+
+
+  return score;
 }
 void dfs(int n, bool fliped, int deg, Position p, Field& f) {
   /* n番の石をfliped + degの状態で、f上のpに置くところから深く */
@@ -234,7 +271,7 @@ void dfs(int n, bool fliped, int deg, Position p, Field& f) {
   int m = operated(n, fliped, deg);
   std::deque<Position> next_candidates;
 
-  if (put_stone(m, f, next_candidates) > 0) {
+  if (put_stone(m, p, f, next_candidates) > 0) {
   }
 }
 void solve() {
