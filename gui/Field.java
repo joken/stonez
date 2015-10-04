@@ -27,7 +27,7 @@ public class Field {
 		  NONE(0),//からっぽ
 		  STONE(1),//石を置いてる
 		  OBSTACLE(2),//最初からある障害物
-		  TRANSPARENCY(3);
+		  TRANSPARENCY(3);//からっぽでみえない(石情報の石ではない部分)
 
 		  private Color state;//色情報
 		  private int X,Y;//座標値
@@ -54,6 +54,14 @@ public class Field {
 		    	  state = new Color(0x9E0099);//むらさき
 			    }
 			}
+
+		public void setStateToRed(){
+			state = new Color(0xFF0000);
+		}
+
+		public void setStateToStonePut(){
+			state = new Color(0xB2CCFE);//薄い青
+		}
 
 		public Color getState(){
 			return state;

@@ -1,9 +1,6 @@
 package com.procon.gui;
 
-import java.awt.Color;
 import java.io.File;
-import java.util.ArrayList;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -18,8 +15,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import com.procon.gui.Field.ZukuState;
 
 public class FieldViewctrl {
 
@@ -108,7 +103,6 @@ public class FieldViewctrl {
 							try {
 								questfield.setText(FieldView.field.setFile
 								(f.getAbsolutePath()));
-								SetField();
 								state.setText("done");
 								this.FieldEditLauncher.setDisable(false);
 								this.AnswerTypeBtn.setDisable(false);
@@ -137,19 +131,6 @@ public class FieldViewctrl {
 	private void onEditLaunch(){
 		FieldEdit e = new FieldEdit();
 		e.launch();
-	}
-
-	private void SetField(){
-		//デバッグようにつかってね
-		//(Setしたりとかし)ないです。
-		ArrayList<Color> r = new ArrayList<Color>();
-		ZukuState[][] F = FieldView.field.getField();
-		for(int i = 0; i < Field.FIELD_SIZE; i++){
-			for(int j = 0; j < Field.FIELD_SIZE; j++){
-				r.add(F[i][j].getState());
-				System.out.println(r.get(j).toString());
-			}
-		}
 	}
 
 }

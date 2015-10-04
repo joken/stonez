@@ -46,7 +46,8 @@ public class Stone {
 		return reversed;
 	}
 
-	/*public void setPosition(ZukuState[][] z,int x, int y){
+	@Deprecated
+	public void setPosition(ZukuState[][] z,int x, int y){
 		int curX = 0,curY = 0;
 		for (int i = 0; i < Field.STONE_SIZE; i++) {
 			for (int j = 0; j < Field.STONE_SIZE; j++) {
@@ -55,7 +56,15 @@ public class Stone {
 				z[j][i].setXY(curX, curY);
 			}
 		}
-	}*/
+	}
+
+	/**
+	 * 回転と裏返し情報をリセット
+	 * */
+	public void reset(){
+		rotated = 0;
+		reversed = 0;
+	}
 
 	/**
 	 * 石情報を返す
