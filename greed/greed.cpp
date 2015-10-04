@@ -8,7 +8,7 @@
 /* definitions */
 const int stone_size = 8;
 const int field_size = 32;
-const int empty_val = -1; // 障害物やzkの無いことを表す
+const int empty_val = 257; // 障害物やzkの無いことを表す
 const int filled_val = 256; // 障害物を表す
 FILE* dumpout = stdout; // dump系関数の出力先
 
@@ -259,9 +259,11 @@ void print_anser(Field& f) {
 }
 
 /* solver */
-int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candidates) {
+int put_stone(int m, bool flip, int deg, Position base, Field& f, std::deque<Position>& next_candidates) {
   /* 石を置く処理。ついでに次に石を置けそうな場所を探す */
   int score = 0;
+  int n = operated(m, flip, deg);
+  bool flag = false; // となりに石があるかフラグ。本来不要
   Field backup = f;
   for (auto p : stones[n].fills) { // zkごとにおけるかどうかを判定する
     int y = base.y + p.y;
@@ -272,8 +274,9 @@ int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candida
       return 0;
     }
 
+
     score += 1;
-    f.raw[y][x] = n;
+    f.raw[y][x] = m;
 
     /* 置いたところは候補から外す */
     auto exists = std::find(next_candidates.begin(), next_candidates.end(), Position{y, x});
@@ -285,6 +288,11 @@ int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candida
     int dy[] = {-1, 0, 0, 1};
     int dx[] = {0, -1, 1, 0};
     for (int i = 0; i < 4; ++i) {
+      if (!flag &&
+          pos_check(y + dy[i], x + dx[i]) &&
+          f.raw[y + dy[i]][x + dx[i]] > n) {
+        flag = true;
+      }
       if (pos_check(y + dy[i], x + dx[i]) &&
           f.raw[y + dy[i]][x + dx[i]] == empty_val) {
         Position newpos{y+dy[i], x+dx[i]};
@@ -295,6 +303,11 @@ int put_stone(int n, Position base, Field& f, std::deque<Position>& next_candida
     }
   }
 
+  if (!flag) {
+      next_candidates.clear();
+      f = backup;
+      return 0;
+  }
 
   return score;
 }
@@ -304,11 +317,9 @@ void dfs(int nowscore, int n, bool fliped, int deg, Position p, Field f, std::de
     return;
   }
 
-  int m = operated(n, fliped, deg);
-
   int score;
 
-  if ((score = put_stone(m, p, f, next_empties)) > 0) {
+  if ((score = put_stone(n, fliped, deg, p, f, next_empties)) > 0) {
     score += nowscore;
     fprintf(stderr, "score - %d\n", score);
     /* 石を置いた時の処理 */
