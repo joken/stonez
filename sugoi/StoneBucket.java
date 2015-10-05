@@ -1,22 +1,28 @@
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 class StoneBucket {
-	private HashSet<Stone> stones;
+	private Set<Stone> stones;
 
 	public StoneBucket(int initialCapacity) {
 		stones = new HashSet<Stone>(initialCapacity);
+	}
+
+	public StoneBucket(Collection<? extends Stone> c) {
+		stones = new HashSet<Stone>(c);
 	}
 
 	public void add(Stone stone) {
 		stones.add(stone);
 	}
 
-	public List<Stone> getStones() {
-		return stones.stream()
-			.filter(stone -> !stone.isDeleted())
-			.collect(Collectors.toList());
+	public void addAll(Collection<? extends Stone> c) {
+		stones.addAll(c);
+	}
+
+	public Set<Stone> getStones() {
+		return stones;
 	}
 
 	public int size() {
@@ -27,10 +33,8 @@ class StoneBucket {
 		stones.clear();
 	}
 
-	public void remove(int i_stone, int op) {
-		stones.stream()
-			.filter(stone -> stone.is(i_stone, op))
-			.forEach(stone -> stone.delete());
+	public void reset() {
+		stones.forEach(stone -> stone.reset());
 	}
 
 	@Override
@@ -42,4 +46,5 @@ class StoneBucket {
 		}
 		return sb.toString();
 	}
+
 }
