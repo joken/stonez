@@ -1,22 +1,26 @@
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 class StoneBucket {
-	private HashSet<PlacedStone> stones;
+	private HashSet<Stone> stones;
 
 	public StoneBucket(int initialCapacity) {
-		stones = new HashSet<PlacedStone>(initialCapacity);
+		stones = new HashSet<Stone>(initialCapacity);
 	}
 
-	public void add(PlacedStone stone) {
+	public void add(Stone stone) {
 		stones.add(stone);
 	}
 
-	public Iterable<PlacedStone> getStones() {
-		return stones;
+	public List<Stone> getStones() {
+		return stones.stream()
+			.filter(stone -> !stone.isDeleted())
+			.collect(Collectors.toList());
 	}
 
 	public int size() {
-		return stones.size();
+		return getStones().size();
 	}
 
 	public void clear() {
@@ -24,13 +28,15 @@ class StoneBucket {
 	}
 
 	public void remove(int i_stone, int op) {
-		stones.removeIf(stone -> stone.is(i_stone, op));
+		stones.stream()
+			.filter(stone -> stone.is(i_stone, op))
+			.forEach(stone -> stone.delete());
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for (PlacedStone stone : stones) {
+		for (Stone stone : stones) {
 			sb.append(stone.toString());
 			sb.append("\r\n");
 		}
