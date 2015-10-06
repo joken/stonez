@@ -1,5 +1,7 @@
+import java.util.Arrays;
+
 class StatusCandidate {
-	private char[] state;
+	private State[] states;
 	private int size;
 
 	class Status {
@@ -10,28 +12,28 @@ class StatusCandidate {
 		}
 
 		public State getState() {
-			return State.values()[state[id] - '0'];
+			return states[id];
 		}
 
 		public void set(State state_set) {
-			state[id] = state_set.getIndex();
+			states[id] = state_set;
 		}
 	}
 
 	public StatusCandidate(StoneBucket candidates) {
 		size = candidates.size();
-		state = new char[size];
+		states = new State[size];
 		int id = 0;
 		for (Stone stone : candidates.getStones()) {
 			stone.setStatusObject(new Status(id++));
 		}
 	}
 
-	public String save() {
-		return new String(state);
+	public State[] save() {
+		return Arrays.copyOf(states, states.length);
 	}
 
-	public void load(String state) {
-		this.state = state.toCharArray();
+	public void load(State[] states) {
+		this.states = Arrays.copyOf(states, states.length);
 	}
 }

@@ -9,8 +9,8 @@ import java.util.Scanner;
 import java.util.Set;
 
 class Solver1 {
-	/** スコア 0 で停止 */
-	private static final boolean STOP_AT_0 = true;
+	/** あるスコアで停止 */
+	private static final int STOP_AT = 0;
 
 	private static final int SIZE_FIELD = 32;
 	private static final int SIZE_STONE = 8;
@@ -269,21 +269,6 @@ class Solver1 {
 				candidates.reset();
 				// 解く
 				solve(stone);
-				// 解答をまとめる
-				int score = getScore();
-				long num_stones_placed = countPlacedStones();
-				String answer_string = export();
-				if (!answers.containsKey(score)) {
-					answers.put(score, new HashMap<Integer, String>(num_stones, 0.1f));
-				}
-				answers.get(score).put((int) num_stones_placed, answer_string);
-				if (score < 10) {
-					System.out.println(dumpField());
-				}
-				System.out.printf("SCORE: %3d, STONES: %3d\r\n", score, num_stones_placed);
-				if (STOP_AT_0 && score == 0) {
-					return;
-				}
 			}
 		}
 	}
@@ -291,8 +276,24 @@ class Solver1 {
 	private void solve(Stone stone) {
 		// 置く
 		stone.place(candidates_by_i, candidates_by_position);
-		System.out.println(stone.dump());
-		System.out.println(dumpField());
+		// 解答をまとめる
+		int score = getScore();
+		System.out.println(score);
+		if (score <= STOP_AT) {
+			System.out.println(dumpField());
+			long num_stones_placed = countPlacedStones();
+			String answer_string = export();
+			if (!answers.containsKey(score)) {
+				answers.put(score, new HashMap<Integer, String>(num_stones, 1.0f));
+			}
+			answers.get(score).put((int) num_stones_placed, answer_string);
+			if (score < 10) {
+				System.out.println(dumpField());
+			}
+			System.out.printf("SCORE: %3d, STONES: %3d\r\n", score,
+					num_stones_placed);
+			return;
+		}
 		// 隣接する石の候補を計算
 		Set<Stone> stones_neighbor;
 		if (!neighbors.containsKey(stone)) {
@@ -304,9 +305,9 @@ class Solver1 {
 		// 隣接する石を探索
 		for (Stone stone_neighbor : stones_neighbor) {
 			if (stone_neighbor.isFollowedAfter(stone) && stone_neighbor.isReady()) {
-//				String tmp = status_candidate.save();
+				State[] tmp = status_candidate.save();
 				solve(stone_neighbor);
-//				status_candidate.load(tmp);
+				status_candidate.load(tmp);
 			}
 		}
 	}
