@@ -77,7 +77,7 @@ class Solver1 {
 		parse(in);
 		// 石の候補を探す
 		printWithTime("seeking candidates...", System.out);
-		seekCandidates();
+		findCandidates();
 		// 解く
 		printWithTime("solving...", System.out);
 		solve();
@@ -113,7 +113,7 @@ class Solver1 {
 		candidates_by_position = new StoneBucket[SIZE_FIELD][SIZE_FIELD];
 		candidates_by_i = new StoneBucket[num_stones];
 		neighbors = new HashMap<Stone, StoneBucket>(num_stones, 1.0f);
-		answers = new HashMap<Integer, Map<Integer,String>>((SIZE_FIELD + OFFSET_FIELD) * (SIZE_FIELD + OFFSET_FIELD), 0.1f);
+		answers = new HashMap<Integer, Map<Integer,String>>((SIZE_FIELD + OFFSET_FIELD) * (SIZE_FIELD + OFFSET_FIELD), 1.0f);
 		// 空行を読む
 		in.nextLine();
 		// 石を読む
@@ -160,7 +160,7 @@ class Solver1 {
 		}
 	}
 
-	private void seekCandidates() {
+	private void findCandidates() {
 		// 準備
 		for (int i = 0; i < num_stones; i++) {
 			candidates_by_i[i] = new StoneBucket(num_stones * Operation.COUNT);
@@ -181,9 +181,9 @@ class Solver1 {
 							continue;
 						}
 						if (values == null) {
-							values = seekValuesPlaceable(i_field + j_stone, i_stone, op, j_stone);
+							values = findValuesPlaceable(i_field + j_stone, i_stone, op, j_stone);
 						} else {
-							values.retainAll(seekValuesPlaceable(i_field + j_stone, i_stone, op, j_stone));
+							values.retainAll(findValuesPlaceable(i_field + j_stone, i_stone, op, j_stone));
 						}
 					}
 					// 格納
@@ -241,7 +241,7 @@ class Solver1 {
 	}
 
 	/** 敷地の i_field 行に対して石 i_stone に操作 op を行った行 j_stone が配置可能な石左上の列位置を返す */
-	private List<Integer> seekValuesPlaceable(int i_field, int i_stone, int op, int j_stone) {
+	private List<Integer> findValuesPlaceable(int i_field, int i_stone, int op, int j_stone) {
 		List<Integer> indexes = new ArrayList<Integer>(SIZE_FIELD + SIZE_STONE - 1);
 		if (i_field < 0 || i_field >= SIZE_FIELD) {
 			return indexes;
@@ -273,14 +273,14 @@ class Solver1 {
 		}
 	}
 
-	private void solve(Stone stone) {
+	private void solve(Stone stone_placed) {
 		// 置く
-		stone.place(candidates_by_i, candidates_by_position);
+		stone_placed.place(candidates_by_i, candidates_by_position);
 		// 解答をまとめる
 		int score = getScore();
-		System.out.println(score);
+		System.out.println(dumpField());
+		System.out.println("SCORE: " + score);
 		if (score <= STOP_AT) {
-			System.out.println(dumpField());
 			long num_stones_placed = countPlacedStones();
 			String answer_string = export();
 			if (!answers.containsKey(score)) {
@@ -296,18 +296,23 @@ class Solver1 {
 		}
 		// 隣接する石の候補を計算
 		Set<Stone> stones_neighbor;
-		if (!neighbors.containsKey(stone)) {
-			stones_neighbor = seekNeighbors(stone);
-			neighbors.put(stone, new StoneBucket(stones_neighbor));
+		if (!neighbors.containsKey(stone_placed)) {
+			stones_neighbor = seekNeighbors(stone_placed);
+			neighbors.put(stone_placed, new StoneBucket(stones_neighbor));
 		} else {
-			stones_neighbor = neighbors.get(stone).getStones();
+			stones_neighbor = neighbors.get(stone_placed).getStones();
 		}
 		// 隣接する石を探索
-		for (Stone stone_neighbor : stones_neighbor) {
-			if (stone_neighbor.isFollowedAfter(stone) && stone_neighbor.isReady()) {
-				State[] tmp = status_candidate.save();
-				solve(stone_neighbor);
-				status_candidate.load(tmp);
+		for (Stone stone : candidates.getStones()) {
+			if (!stone.isPlaced()) {
+				continue;
+			}
+			for (Stone stone_neighbor : neighbors.get(stone).getStones()) {
+				if (stone_neighbor.isFollowedAfter(stone_placed) && stone_neighbor.isReady()) {
+//					State[] tmp = status_candidate.save();
+					solve(stone_neighbor);
+//					status_candidate.load(tmp);
+				}
 			}
 		}
 	}

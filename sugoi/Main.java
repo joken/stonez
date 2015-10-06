@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException {
-		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest17.txt");
+		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest1.txt");
 
 		long t0 = System.currentTimeMillis();
 		// --------------
