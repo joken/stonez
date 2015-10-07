@@ -297,7 +297,7 @@ class Solver1 {
 		// 隣接する石の候補を計算
 		Set<Stone> stones_neighbor;
 		if (!neighbors.containsKey(stone_placed)) {
-			stones_neighbor = seekNeighbors(stone_placed);
+			stones_neighbor = findNeighbors(stone_placed);
 			neighbors.put(stone_placed, new StoneBucket(stones_neighbor));
 		} else {
 			stones_neighbor = neighbors.get(stone_placed).getStones();
@@ -317,7 +317,7 @@ class Solver1 {
 		}
 	}
 
-	private Set<Stone> seekNeighbors(Stone stone_me) {
+	private Set<Stone> findNeighbors(Stone stone_me) {
 		// 準備
 		int i_field_me = stone_me.getIField();
 		int value_me = stone_me.getValue();
