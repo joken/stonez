@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <vector>
+#include <map>
 #include <deque>
 #include <string>
 #include <algorithm>
@@ -32,10 +33,17 @@ struct Stone {
   std::deque<Position> fills; // 埋まってる座標を持っておく
 };
 
+struct OperatedStone {
+  int n;
+  bool flip;
+  int deg;
+};
+
 struct Field {
   /* フィールド */
   int raw[field_size][field_size];
   std::deque<std::string> answer; // 答えとなる石の置き方を持っておく
+  std::map<Position, std::deque<OperatedStone>> placable_stones;
 };
 
 int number_of_stones; // 与えられる石の数
@@ -199,6 +207,23 @@ void get_field() {
   }
 }
 
+void get_placables(Field& f, int m, bool flip, int deg) {
+  int n = operated(m, flip, deg);
+
+  int y = stones[n].fills.begin()->y;
+  int x = stones[n].fills.begin()->x;
+
+  for (auto e : initial_empties) {
+    bool flag = true;
+    for (auto it = stones[n].fills.begin(); it != stones.fills.end(); ++it) {
+      if (!(f.raw[it->y + e.y - y][it->x + e.x + x] == empty_val)) {
+        flag = false;
+        break;
+      }
+    }
+    initial_field.placable_stones[e] = OperatedStone{m, flip, deg};
+  }
+}
 void get_stone(int index) {
   /* 石をひとつ読む */
   for (int i = 0; i < stone_size; ++i) {
@@ -211,6 +236,13 @@ void get_stone(int index) {
       }
     }
     read_br();
+  }
+
+  /* フィールドにおけるのかを調べる */
+  for (int deg = 0; deg <= 270; deg += 90) {
+    for (bool flip = false; !flip; flip = true) {
+        get_placables(initial_field, index, flip, deg);
+    }
   }
 }
 void get_stones() {
