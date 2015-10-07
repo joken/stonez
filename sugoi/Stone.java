@@ -1,8 +1,8 @@
 class Stone {
-	private static final int SIZE_FIELD = 32;
-	private static final int SIZE_STONE = 8;
+	public static final int SIZE_FIELD = 32;
+	public static final int SIZE_STONE = 8;
 	/** 敷地の座標空間の補正値 */
-	private static final int OFFSET_FIELD = SIZE_STONE - 1;
+	public static final int OFFSET_FIELD = SIZE_STONE - 1;
 
 	private int i_stone;
 	private int op;
@@ -50,17 +50,26 @@ class Stone {
 
 	public boolean isPlaced() {
 		checkStatusObject();
-		return status.getState() == State.PLACED_THIS;
+		return status.is(State.PLACED_THIS) || status.is(State.EDGE);
+	}
+
+	public boolean isEdge(Neighbors neighbors) {
+		checkStatusObject();
+		// 更新
+		updateStatus(neighbors);
+		return status.is(State.EDGE);
 	}
 
 	public boolean isReady() {
 		checkStatusObject();
-		return status.getState() == State.READY;
+		return status.is(State.READY);
 	}
 
-	public void place(StoneBucket[] candidates_by_i, StoneBucket[][] candidates_by_position) {
+	public void place(StoneBucket[] candidates_by_i, StoneBucket[][] candidates_by_position, Neighbors neighbors) {
 		checkStatusObject();
-
+		if (!status.is(State.READY)) {
+			throw new IllegalStateException();
+		}
 		// おなじ石番号の候補
 		for (Stone stone_other : candidates_by_i[i_stone].getStones()) {
 			stone_other.status.set(State.PLACED_OTHER);
@@ -70,19 +79,19 @@ class Stone {
 			if (lines[j_stone] == 0) {
 				continue;
 			}
-			int i = i_field + j_stone;
+			int i = i_field + j_stone + OFFSET_FIELD;
 			if (i < 0) {
 				continue;
 			}
-			if (i >= SIZE_FIELD) {
+			if (i >= SIZE_FIELD + OFFSET_FIELD) {
 				break;
 			}
 			for (int value_stone = 0; value_stone < SIZE_STONE; value_stone++) {
-				int v = value + value_stone;
+				int v = value + value_stone + OFFSET_FIELD;
 				if (v < 0) {
 					continue;
 				}
-				if (v >= SIZE_FIELD) {
+				if (v >= SIZE_FIELD + OFFSET_FIELD) {
 					break;
 				}
 				if (((lines[j_stone] >> (OFFSET_FIELD - value_stone)) & 1) == 1) {
@@ -93,7 +102,40 @@ class Stone {
 			}
 		}
 		// この候補
+		if (canBeEdge(neighbors)) {
+			// エッジ
+			status.set(State.EDGE);
+		} else {
+			// エッジではない
+			status.set(State.PLACED_THIS);
+		}
+	}
+
+	// エッジかどうかを判定して更新
+	private void updateStatus(Neighbors neighbors) {
+		// もとからエッジじゃなかった
+		if (!status.is(State.EDGE)) {
+			return;
+		}
+		if (canBeEdge(neighbors)) {
+			// まだエッジ
+			status.set(State.EDGE);
+			return;
+		}
+		// もはやエッジではない
 		status.set(State.PLACED_THIS);
+	}
+
+	private boolean canBeEdge(Neighbors neighbors) {
+		// 隣接する石の候補を調べる
+		for (Stone neighbor : neighbors.getNeighbors(this)) {
+			if (neighbor.isReady()) {
+				// エッジっぽい
+				return true;
+			}
+		}
+		// エッジっぽくない
+		return false;
 	}
 
 	private void checkStatusObject() {
@@ -102,7 +144,7 @@ class Stone {
 		}
 	}
 
-	public boolean isFollowedAfter(Stone stone) {
+	public boolean isFollowingAfter(Stone stone) {
 		return stone.i_stone < i_stone;
 	}
 
@@ -130,9 +172,6 @@ class Stone {
 
 	@Override
 	public String toString() {
-		return String.format("[Stone] %3d %d (%2d, %2d)", i_stone, op, value, i_field);
+		return String.format("[Stone] %3d %d (%2d, %2d) %s", i_stone, op, value, i_field, status);
 	}
-
-
-
 }
