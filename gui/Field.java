@@ -13,7 +13,7 @@ public class Field {
 	public static final int ZUKU_SIZE = 15;
 	public static final int FIELD_SIZE = 32;
 	public static final int STONE_SIZE = 8;
-	public static final int FIELD_BASE = 50;
+	public static final int FIELD_BASE = 150;
 
 	private ZukuState[][] zstate;
 	private Stone stones;
@@ -31,8 +31,10 @@ public class Field {
 
 		  private Color state;//色情報
 		  private int X,Y;//座標値
+		  private boolean putable;//置けるかどうか
 
 		  private ZukuState(int id){
+			putable = false;
 		    setstate(id);
 		  }
 
@@ -40,6 +42,7 @@ public class Field {
 			  switch(id){
 		      case 0:
 		        state = new Color(0xFFFFFF);//白色
+		        putable = true;
 		        break;
 		      case 1:
 		        state = new Color(0x005AFF);//青色
@@ -61,6 +64,7 @@ public class Field {
 
 		public void setStateToStonePut(){
 			state = new Color(0xB2CCFE);//薄い青
+			putable = false;
 		}
 
 		public Color getState(){
@@ -85,6 +89,10 @@ public class Field {
 
 		public void setXY(int x, int y){
 			setX(x);setY(y);
+		}
+
+		public boolean isPutable(){
+			return putable;
 		}
 
 	}

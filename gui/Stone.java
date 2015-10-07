@@ -12,9 +12,11 @@ public class Stone {
 	private ArrayList<ZukuState[][]> stones;//問題から吸った全石情報
 	private short rotated;//回転
 	private short reversed;//裏返し
+	public int length;//石数
 
 	Stone(ArrayList<ZukuState[][]> stone){
 		stones = stone;
+		length = stone.size();
 	}
 
 	public void rotate(){
