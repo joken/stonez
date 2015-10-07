@@ -1,17 +1,47 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
 
-	public static void main(String[] args) throws FileNotFoundException {
-		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest1.txt");
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+		// 自力で解く
+//		main_solve();
+		// ソルバに任せる
+		main_lp();
+	}
+
+	private static void main_lp() throws IOException {
+		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest12.txt");
+		File file_out = new File("C:/users/kazuaki/desktop/procon.lp");
 
 		long t0 = System.currentTimeMillis();
 		// --------------
 
 		Solver1 solver = new Solver1(new Scanner(file));
+		String script_lp = solver.exportLP();
+
+		// --------------
+		long t1 = System.currentTimeMillis();
+
+		try (FileWriter out = new FileWriter(file_out)) {
+			out.write(script_lp);
+		}
+
+		System.out.println("TIME : " + (t1 - t0));
+	}
+
+	private static void main_solve() throws FileNotFoundException {
+		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest9.txt");
+
+		long t0 = System.currentTimeMillis();
+		// --------------
+
+		Solver1 solver = new Solver1(new Scanner(file));
+		solver.solve();
 
 		// --------------
 		long t1 = System.currentTimeMillis();
