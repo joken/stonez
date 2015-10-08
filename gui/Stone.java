@@ -1,6 +1,7 @@
 package com.procon.gui;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import com.procon.gui.Field.ZukuState;
 
@@ -79,6 +80,21 @@ public class Stone {
 		}else{
 			return null;
 		}
+	}
+
+	public String getLP(Map<Integer,Integer> m){
+		StringBuilder suiren = new StringBuilder();
+		suiren.append(m.toString().replaceAll("([)(])", "").replace("=", " "));
+		switch(this.getreverse()){
+		case 0:
+			suiren.append(" H ");
+			break;
+		case 1:
+			suiren.append(" T ");
+		}
+		suiren.append(this.getAngle());
+		suiren.append("\r\n");
+		return suiren.toString();
 	}
 
 }

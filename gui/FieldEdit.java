@@ -2,7 +2,6 @@ package com.procon.gui;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-
 import com.procon.gui.Field.ZukuState;
 
 import processing.core.PApplet;
@@ -132,6 +131,7 @@ public class FieldEdit extends PApplet {
 		}
 	}
 
+	@SuppressWarnings("serial")
 	private void stoneput(){
 		//各石座標取得 -> それがNONEに入ってるか探索(クソース)
 		ArrayList<ZukuState> suiren = new ArrayList<ZukuState>();
@@ -141,11 +141,19 @@ public class FieldEdit extends PApplet {
 				int fx = (int)List2.get(0),fy = (int)List2.get(1);
 				ZukuState z = (ZukuState)List2.get(2);
 				System.out.println(sx +","+ sy +","+ fx +","+ fy);
+				if(!z.isPutable()){
+					this.status = "out of field or Overrding";
+					return;
+				}
 				if(sx >= fx && sx < fx + Field.ZUKU_SIZE
 						&& sy >= fy && sy < fy + Field.ZUKU_SIZE
 						&& z.isPutable()){
 					System.out.println("found");
-					suiren.add((z));
+					ZukuState fz = field[index2 % 8][index2 / 8];
+					stones.getLP(new LinkedHashMap<Integer,Integer>(){{
+						put((fz.getX() - Field.FIELD_BASE)/Field.ZUKU_SIZE
+						,(fz.getY() - Field.FIELD_BASE)/Field.ZUKU_SIZE);}});
+					suiren.add(fz);
 				}
 			});
 		});
@@ -156,6 +164,7 @@ public class FieldEdit extends PApplet {
 		for(int e = 0; e < suiren.size(); e++){
 			suiren.get(e).setStateToStonePut();
 		}
+		status = "1 put";
 		this.CurrentStoneIndex++;
 	}
 
