@@ -11,20 +11,21 @@ public class Main {
 		// 自力で解く
 //		main_solve();
 		// 読む
-		mail_lp_read();
+//		mail_lp_read();
 		// ソルバに任せる
 		main_lp();
 	}
 
+	private static File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest17.txt");
+
 	private static void mail_lp_read() throws FileNotFoundException {
-		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest17.txt");
+
 		File file_result = new File("C:/users/kazuaki/desktop/procon.sol");
 		Solver1 solver = new Solver1(new Scanner(file));
 		solver.importLP(new Scanner(file_result));
 	}
 
 	private static void main_lp() throws IOException {
-		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest17.txt");
 		File file_out = new File("C:/users/kazuaki/desktop/procon.lp");
 
 		long t0 = System.currentTimeMillis();
@@ -44,7 +45,6 @@ public class Main {
 	}
 
 	private static void main_solve() throws FileNotFoundException {
-		File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest9.txt");
 
 		long t0 = System.currentTimeMillis();
 		// --------------
