@@ -27,7 +27,8 @@ public class Field {
 		  NONE(0),//からっぽ
 		  STONE(1),//石を置いてる
 		  OBSTACLE(2),//最初からある障害物
-		  TRANSPARENCY(3);//からっぽでみえない(石情報の石ではない部分)
+		  TRANSPARENCY(3),//からっぽでみえない(石情報の石ではない部分)
+		  PUTSTONE(4);//置かれた石
 
 		  private Color state;//色情報
 		  private int X,Y;//座標値
@@ -52,6 +53,9 @@ public class Field {
 		        break;
 		      case 3:
 		    	  state = new Color(0xFFFFFFF, true);//白色(透明)
+		    	  break;
+		      case 4:
+		    	  state = new Color(0xB2CCFE);
 		    	  break;
 		      default:
 		    	  state = new Color(0x9E0099);//むらさき

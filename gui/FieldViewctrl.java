@@ -1,16 +1,20 @@
 package com.procon.gui;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -137,6 +141,19 @@ public class FieldViewctrl {
 
 	@FXML
 	private void onEditLaunch(){
+		FXMLLoader loader = new FXMLLoader
+				(this.getClass().getResource("AnswerSubmitView.fxml"));
+		Stage s = new Stage();
+		try {
+			s.setScene(new Scene((Parent)loader.load()));
+			s.setTitle("石畳職人Zwei");
+			s.getIcons().add(new Image(this.getClass()
+					.getResourceAsStream("icon.png")));
+			s.show();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
 		FieldEdit e = new FieldEdit();
 		e.launch();
 	}

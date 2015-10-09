@@ -80,6 +80,10 @@ public class FieldEdit extends PApplet {
 						i * Field.ZUKU_SIZE + Field.FIELD_BASE);
 				//System.out.println(field[j][i].getX() + " , "
 						//+ field[j][i].getY());デバッグ
+				System.out.printf("%d,%d,%d\n",
+						field[j][i].getState().getRed(),
+						field[j][i].getState().getGreen(),
+						field[j][i].getState().getBlue());
 				fill(field[j][i].getState().getRed(),
 						field[j][i].getState().getGreen(),
 						field[j][i].getState().getBlue(),
@@ -131,15 +135,32 @@ public class FieldEdit extends PApplet {
 		}
 	}
 
-	@SuppressWarnings("serial")
 	private void stoneput(){
 		//各石座標取得 -> それがNONEに入ってるか探索(クソース)
-		ArrayList<ZukuState> suiren = new ArrayList<ZukuState>();
-		stonepos.forEach((index,List) ->{
-		int sx = List.get(0), sy = List.get(1);
-			fieldpos.forEach((index2,List2) -> {
+		//ArrayList<ZukuState> suiren = new ArrayList<ZukuState>();
+		ArrayList<LinkedHashMap<Integer,Integer>> cache
+				= new ArrayList<>();
+		int Zmouse1 = searchpos()[0]
+		,Zmouse2 = searchpos()[1];
+		for(int i = 0; i < Field.STONE_SIZE; i++){
+			for(int j = 0; j < Field.STONE_SIZE; j++){
+				ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],
+						zf = field[Zmouse1 + j][Zmouse2 + i];
+				if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+					LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+					l.put(Zmouse1 + j, Zmouse2 + i);
+					cache.add(l);
+					//suiren.add(zf);
+				}
+			}
+		}
+			/*fieldpos.forEach((index2,List2) -> {
 				int fx = (int)List2.get(0),fy = (int)List2.get(1);
 				ZukuState z = (ZukuState)List2.get(2);
+				if(mouseX >= fx && mouseX < fx + Field.ZUKU_SIZE
+					&& mouseY >= fy && mouseY < fy + Field.ZUKU_SIZE){
+
+				}
 				System.out.println(sx +","+ sy +","+ fx +","+ fy);
 				if(!z.isPutable()){
 					this.status = "out of field or Overrding";
@@ -149,23 +170,46 @@ public class FieldEdit extends PApplet {
 						&& sy >= fy && sy < fy + Field.ZUKU_SIZE
 						&& z.isPutable()){
 					System.out.println("found");
-					ZukuState fz = field[index2 % 8][index2 / 8];
 					stones.getLP(new LinkedHashMap<Integer,Integer>(){{
-						put((fz.getX() - Field.FIELD_BASE)/Field.ZUKU_SIZE
-						,(fz.getY() - Field.FIELD_BASE)/Field.ZUKU_SIZE);}});
-					suiren.add(fz);
+						put((z.getX() - Field.FIELD_BASE)/Field.ZUKU_SIZE
+						,(z.getY() - Field.FIELD_BASE)/Field.ZUKU_SIZE);}});
+					suiren.add(z);
 				}
-			});
-		});
-		if(suiren.isEmpty()){
+			});*/
+		/*if(suiren.isEmpty()){
 			status = "out of field or Overriding";
 			return;
 		}
-		for(int e = 0; e < suiren.size(); e++){
-			suiren.get(e).setStateToStonePut();
+		if (stonepos.size() == suiren.size()) {
+			suiren.forEach(z ->
+				z = ZukuState.PUTSTONE);
+		}else{
+			status = "out of field or Overriding";
+			return;
+		}*/
+		if(cache.isEmpty()){
+			status = "out of field or Overriding";
+			return;
 		}
-		status = "1 put";
+		//cache.forEach();
+		status = this.CurrentStoneIndex + " put";
 		this.CurrentStoneIndex++;
+	}
+
+	private int[] searchpos(){
+		int cur = 0;
+		for(int i = 0; i < Field.FIELD_SIZE; i++){
+			for(int j = 0; j < Field.FIELD_SIZE; j++){
+				int fx = (int)fieldpos.get(cur).get(0),
+					fy = (int)fieldpos.get(cur).get(1);
+				if(mouseX >= fx && mouseX < fx + Field.ZUKU_SIZE &&
+						mouseY >= fy && mouseY < fy + Field.ZUKU_SIZE){
+					return new int[]{j,i};
+				}
+				cur++;
+			}
+		}
+		return new int[]{mouseX,mouseY};
 	}
 
 	private void rotate(){
