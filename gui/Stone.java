@@ -1,6 +1,7 @@
 package com.procon.gui;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import com.procon.gui.Field.ZukuState;
 
@@ -12,9 +13,11 @@ public class Stone {
 	private ArrayList<ZukuState[][]> stones;//問題から吸った全石情報
 	private short rotated;//回転
 	private short reversed;//裏返し
+	public int length;//石数
 
 	Stone(ArrayList<ZukuState[][]> stone){
 		stones = stone;
+		length = stone.size();
 	}
 
 	public void rotate(){
@@ -77,6 +80,21 @@ public class Stone {
 		}else{
 			return null;
 		}
+	}
+
+	public String getLP(Map<Integer,Integer> m){
+		StringBuilder suiren = new StringBuilder();
+		suiren.append(m.toString().replaceAll("([)(])", "").replace("=", " "));
+		switch(this.getreverse()){
+		case 0:
+			suiren.append(" H ");
+			break;
+		case 1:
+			suiren.append(" T ");
+		}
+		suiren.append(this.getAngle());
+		suiren.append("\r\n");
+		return suiren.toString();
 	}
 
 }

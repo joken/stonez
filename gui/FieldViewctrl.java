@@ -1,8 +1,11 @@
 package com.procon.gui;
 
 import java.io.File;
+import java.util.List;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -30,6 +33,10 @@ public class FieldViewctrl {
 		FieldViewStage = s;
 	}
 
+	public void setArgs(List<String> args){
+		args.forEach(s -> AnswerArea.appendText(s + "\n"));
+	}
+
 	@FXML
 	private void onExitMenu(){
 		Platform.exit();
@@ -47,7 +54,8 @@ public class FieldViewctrl {
 
 		//GUI部品
 		VBox hb = new VBox();
-		hb.setPrefSize(150, 50);
+		hb.setPrefSize(250, 50);
+		hb.setAlignment(Pos.TOP_CENTER);
 		Label about = new Label("石畳職人Z2015");
 		Button bt = new Button("Close");
 		bt.setOnAction(e -> stage.close());
