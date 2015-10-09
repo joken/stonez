@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <random>
 
 const int field_size = 32;
 const int stone_size = 8;
@@ -20,6 +21,8 @@ const int normal = 0,
 std::istream& in = std::cin;
 std::ostream& out = std::cout;
 std::ostream& err = std::cerr;
+bool shuffle_flag = true;
+bool dump_flag = true;
 
 struct Position {
   int y, x;
@@ -37,12 +40,12 @@ struct OperatedStone {
 };
 struct Field {
   std::array<std::array<int, field_size>, field_size> raw;
-  std::map<Position, std::list<OperatedStone>> candidates;
+  std::map<Position, std::deque<OperatedStone>> candidates;
   std::vector<std::string> answer;
   void print_answer(int, int);
   void dump();
-  void dump(std::list<Position>&);
-  void dump(std::list<Position>&, Position p);
+  void dump(std::deque<Position>&);
+  void dump(std::deque<Position>&, Position p);
 };
 struct Stone {
   std::array<std::array<int, stone_size>, stone_size> raw;
@@ -60,8 +63,8 @@ void parse_stone(int);
 
 void get_candidates();
 void solve();
-void dfs(int, int, int, int, Position, Field, std::list<Position>);
-int put_stone(Field&, int, int, Position, std::list<Position>&);
+int dfs(int, int, int, int, Position, Field, std::deque<Position>);
+int put_stone(Field&, int, int, Position, std::deque<Position>&);
 bool check_pos(int y, int x);
 
 std::string answer_format(Position, int);
@@ -70,37 +73,49 @@ void operate(int);
 
 int stone_number;
 Field initial_field;
-std::list<Position> initial_empties;
+std::deque<Position> initial_empties;
 std::array<std::array<Stone, 8>, 256> stones;
 
 void solve() {
-  std::list<Position> empty_list; empty_list.clear();
+  if (shuffle_flag) {
+    std::shuffle(initial_empties.begin(), initial_empties.end(), std::default_random_engine{});
+  }
+  std::deque<Position> empty_list; empty_list.clear();
   for (auto p : initial_empties) {
-      for (auto s : initial_field.candidates[p]) {
-        dfs(1, 0, s.i, s.j, s.p, initial_field, empty_list);
-      }
-  }
-}
-void dfs(int c, int nowscore, int n, int m, Position p, Field f, std::list<Position> candidates) {
-  int score = 0;
-
-  if ((score = put_stone(f, n, m, p, candidates)) == 0) {
-    return;
-  }
-  f.answer[n] = answer_format(p, m);
-  score += nowscore;
-  f.print_answer(score, c);
-  err << "score:" << score << std::endl;
-
-  for (auto np : candidates) {
-    for (auto s : initial_field.candidates[np]) {
-      if (s.i > n) {
-        dfs(c+1, score, s.i, s.j, s.p, f, candidates);
+    for (auto s : initial_field.candidates[p]) {
+      if (dfs(1, 0, s.i, s.j, s.p, initial_field, empty_list) != 0) {
+        break;
       }
     }
   }
 }
-int put_stone(Field& f, int n, int m, Position p1, std::list<Position>& next) {
+int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Position> candidates) {
+  int score = 0;
+
+  if ((score = put_stone(f, n, m, p, candidates)) == 0) {
+    return 1;
+  }
+  if (dump_flag) {
+    f.dump(candidates);
+  }
+
+  f.answer[n] = answer_format(p, m);
+  score += nowscore;
+  f.print_answer(score, c);
+  err << "score:" << score << ", ";
+
+  for (auto np : candidates) {
+    for (auto s : initial_field.candidates[np]) {
+      if (s.i > n) {
+        if (dfs(c+1, score, s.i, s.j, s.p, f, candidates) != 0) {
+          break;
+        }
+      }
+    }
+  }
+  return 0;
+}
+int put_stone(Field& f, int n, int m, Position p1, std::deque<Position>& next) {
   Field backup = f;
   int score = 0;
 
@@ -156,7 +171,7 @@ void Field::dump() {
   }
 }
 
-void Field::dump(std::list<Position>& ps) {
+void Field::dump(std::deque<Position>& ps) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
       if (raw[i][j] < stone_number) out.put('@');
@@ -168,7 +183,7 @@ void Field::dump(std::list<Position>& ps) {
     out.put('\n');
   }
 }
-void Field::dump(std::list<Position>& ps, Position p) {
+void Field::dump(std::deque<Position>& ps, Position p) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
       if (Position{i, j} == p) out.put('*');
