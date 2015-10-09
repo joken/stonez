@@ -55,9 +55,10 @@ class Stone {
 
 	public boolean isEdge(Neighbors neighbors) {
 		checkStatusObject();
-		// 更新
-		updateStatus(neighbors);
-		return status.is(State.EDGE);
+		return isPlaced();
+		//		// 更新
+//		updateStatus(neighbors);
+//		return status.is(State.EDGE);
 	}
 
 	public boolean isReady() {
@@ -79,19 +80,19 @@ class Stone {
 			if (lines[j_stone] == 0) {
 				continue;
 			}
-			int i = i_field + j_stone + OFFSET_FIELD;
+			int i = i_field + j_stone;
 			if (i < 0) {
 				continue;
 			}
-			if (i >= SIZE_FIELD + OFFSET_FIELD) {
+			if (i >= SIZE_FIELD) {
 				break;
 			}
 			for (int value_stone = 0; value_stone < SIZE_STONE; value_stone++) {
-				int v = value + value_stone + OFFSET_FIELD;
+				int v = value + value_stone;
 				if (v < 0) {
 					continue;
 				}
-				if (v >= SIZE_FIELD + OFFSET_FIELD) {
+				if (v >= SIZE_FIELD) {
 					break;
 				}
 				if (((lines[j_stone] >> (OFFSET_FIELD - value_stone)) & 1) == 1) {

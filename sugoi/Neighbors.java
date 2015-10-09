@@ -36,13 +36,6 @@ class Neighbors {
 		return stones_neighbor;
 	}
 
-	public Set<Stone> getNeighbors(Stone stone_placed, boolean cached) {
-		if (!cached) {
-			return findNeighbors(stone_placed);
-		}
-		return getNeighbors(stone_placed);
-	}
-
 	private Set<Stone> findNeighbors(Stone stone_me) {
 		// 準備
 		int i_field_me = stone_me.getIField();

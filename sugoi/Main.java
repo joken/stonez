@@ -9,14 +9,14 @@ public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		// 自力で解く
-//		main_solve();
+		main_solve();
 		// 読む
 //		mail_lp_read();
 		// ソルバに任せる
-		main_lp();
+//		main_lp();
 	}
 
-	private static File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest17.txt");
+	private static File file = new File("C:/users/kazuaki/documents/projects/stonez/sugoi/quest9.txt");
 
 	private static void mail_lp_read() throws FileNotFoundException {
 
@@ -32,14 +32,12 @@ public class Main {
 		// --------------
 
 		Solver1 solver = new Solver1(new Scanner(file));
-		String script_lp = solver.exportLP();
+		try (FileWriter out = new FileWriter(file_out)) {
+			solver.exportLP(out);
+		}
 
 		// --------------
 		long t1 = System.currentTimeMillis();
-
-		try (FileWriter out = new FileWriter(file_out)) {
-			out.write(script_lp);
-		}
 
 		System.out.println("TIME : " + (t1 - t0));
 	}
