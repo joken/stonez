@@ -39,7 +39,7 @@ struct Field {
   std::array<std::array<int, field_size>, field_size> raw;
   std::map<Position, std::list<OperatedStone>> candidates;
   std::vector<std::string> answer;
-  void print_answer();
+  void print_answer(int, int);
   void dump();
   void dump(std::list<Position>&);
   void dump(std::list<Position>&, Position p);
@@ -60,7 +60,7 @@ void parse_stone(int);
 
 void get_candidates();
 void solve();
-void dfs(int, int, int, Position, Field, std::list<Position>);
+void dfs(int, int, int, int, Position, Field, std::list<Position>);
 int put_stone(Field&, int, int, Position, std::list<Position>&);
 bool check_pos(int y, int x);
 
@@ -77,11 +77,11 @@ void solve() {
   std::list<Position> empty_list; empty_list.clear();
   for (auto p : initial_empties) {
       for (auto s : initial_field.candidates[p]) {
-        dfs(0, s.i, s.j, s.p, initial_field, empty_list);
+        dfs(1, 0, s.i, s.j, s.p, initial_field, empty_list);
       }
   }
 }
-void dfs(int nowscore, int n, int m, Position p, Field f, std::list<Position> candidates) {
+void dfs(int c, int nowscore, int n, int m, Position p, Field f, std::list<Position> candidates) {
   int score = 0;
 
   if ((score = put_stone(f, n, m, p, candidates)) == 0) {
@@ -89,20 +89,15 @@ void dfs(int nowscore, int n, int m, Position p, Field f, std::list<Position> ca
   }
   f.answer[n] = answer_format(p, m);
   score += nowscore;
-  Position dumpP = p;
-  dumpP.y += stones[n][m].zks.begin()->y;
-  dumpP.x += stones[n][m].zks.begin()->x;
-  f.dump(candidates, dumpP);
-  stones[n][m].dump();
-  f.print_answer();
-  printf("score: %d\n\n", score);
+  f.print_answer(score, c);
+  err << "score:" << score << std::endl;
 
   for (auto np : candidates) {
-      for (auto s : initial_field.candidates[np]) {
-        if (s.i > n) {
-          dfs(score, s.i, s.j, s.p, f, candidates);
-        }
+    for (auto s : initial_field.candidates[np]) {
+      if (s.i > n) {
+        dfs(c+1, score, s.i, s.j, s.p, f, candidates);
       }
+    }
   }
 }
 int put_stone(Field& f, int n, int m, Position p1, std::list<Position>& next) {
@@ -288,7 +283,9 @@ void get_candidates() {
           }
         }
         if (flag) {
-          initial_field.candidates[Position{f_p.y, f_p.x}].push_back(OperatedStone{i, j, Position{y, x}});
+        for (auto s_p : stones[i][j].zks) {
+            initial_field.candidates[Position{f_p.y, f_p.x}].push_back(OperatedStone{i, j, Position{f_p.y - s_p.y, f_p.x - s_p.x}});
+          }
         }
       }
     }
@@ -307,7 +304,8 @@ std::string answer_format(Position p, int n) {
   return base;
 }
 
-void Field::print_answer() {
+void Field::print_answer(int score, int c) {
+  out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
   for (int i = 0; i < stone_number; ++i) {
     out << answer[i] << "\r\n";
   }
