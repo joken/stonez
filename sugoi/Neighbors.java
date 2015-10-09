@@ -31,9 +31,17 @@ class Neighbors {
 			stones_neighbor = findNeighbors(stone_placed);
 			neighbors.put(stone_placed, new StoneBucket(stones_neighbor));
 		} else {
+			System.out.println(" HIT");
 			stones_neighbor = neighbors.get(stone_placed).getStones();
 		}
 		return stones_neighbor;
+	}
+
+	public Set<Stone> getNeighbors(Stone stone_placed, boolean cached) {
+		if (!cached) {
+			return findNeighbors(stone_placed);
+		}
+		return getNeighbors(stone_placed);
 	}
 
 	private Set<Stone> findNeighbors(Stone stone_me) {

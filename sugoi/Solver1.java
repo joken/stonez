@@ -404,12 +404,12 @@ class Solver1 {
 		return sb.toString();
 	}
 
-	public String exportLP(FileWriter out) throws IOException {
+	public void exportLP(FileWriter out) throws IOException {
 		printWithTime("exporting as LP...", System.out);
 		int i = 0;
-		StringBuilder sb = new StringBuilder();
 		printWithTime("minimize", System.out);
 		appendln(out, "minimize");
+		appendln(out, "z");
 		printWithTime("subject to", System.out);
 		appendln(out, "subject to");
 		// 目的関数の制約
@@ -418,7 +418,7 @@ class Solver1 {
 		appendsp(out, String.format("c%d:", i++));
 		for (int i_candidate = 0; i_candidate < candidates.size(); i_candidate++) {
 			map_candidate.put(list_candidate.get(i_candidate), i_candidate);
-			appendsp(out, "- %d x(%d)", num_zk_stone[list_candidate.get(i_candidate).getIStone()], i_candidate);
+			appendsp(out, "- %d x(%X)", num_zk_stone[list_candidate.get(i_candidate).getIStone()], i_candidate);
 		}
 		appendsp(out, "- z");
 		appendsp(out, "<=");
@@ -427,12 +427,13 @@ class Solver1 {
 //		printWithTime("subject to: number of stones", System.out);
 //		sb = new StringBuilder();
 //		for (int i_candidate = 0; i_candidate < list_candidate.size(); i_candidate++) {
-//			appendsp(out, "+ x(%d)", i_candidate);
+//			appendsp(out, "+ x(%X)", i_candidate);
 //		}
 //		appendsp(out, "- z");
 //		appendsp(out, "<=");
 //		appendsp(out, "0");
 //		builder.addConstraint(sb.toString());
+		out.flush();
 		// ある石番号の候補は1つしか置けない
 		printWithTime("subject to: i_stone", System.out);
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
@@ -442,119 +443,127 @@ class Solver1 {
 			}
 			appendsp(out, String.format("c%d:", i++));
 			for (Stone stone : stones) {
-				appendsp(out, "+ x(%d)", map_candidate.get(stone));
+				appendsp(out, "+ x(%X)", map_candidate.get(stone));
 			}
 			appendsp(out, "<=");
 			appendln(out, "1");
 		}
+		out.flush();
 		// ある位置に候補は1つしか置けない *
 		printWithTime("subject to: position", System.out);
 		for (int y = 0; y < SIZE_FIELD; y++) {
 			for (int x = 0; x < SIZE_FIELD; x++) {
-				appendsp(out, String.format("c%d:", i++));
 				if (candidates_by_position[y][x].size() == 0) {
 					continue;
 				}
+				appendsp(out, String.format("c%d:", i++));
 				for (Stone stone : candidates_by_position[y][x].getStones()) {
-					appendsp(out, "+ x(%d)", map_candidate.get(stone));
+					appendsp(out, "+ x(%X)", map_candidate.get(stone));
 				}
 				appendsp(out, "<=");
 				appendln(out, "1");
 			}
 		}
+		out.flush();
 		// 1番目においた石が1つある
 		printWithTime("subject to: first stone", System.out);
 		appendsp(out, String.format("c%d:", i++));
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
-			appendsp(out, "+ y(%d)", i_stone);
+			appendsp(out, "+ y(%X)", i_stone);
 		}
 		appendsp(out, "=");
 		appendln(out, "1");
+		out.flush();
 		// 1番目に置いた石の番号より小さい番号の石は置かれていない  30 sec
 		printWithTime("subject to: fiest stone confirm 1", System.out);
-		SubstringFirstStoneConfirm1 substring = new SubstringFirstStoneConfirm1();
-		for (int i_stone = 1; i_stone < num_stones; i_stone++) {
+		String substring = "";
+		int i_stone_current = 0;
+		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
 			appendsp(out, String.format("c%d:", i++));
-			appendsp(out, "+ y(%d)", i_stone);
-			appendsp(out, substring.appendFirstStoneConfirm1(i_stone));
+			appendsp(out, "+ y(%X)", i_stone);
+			for (int is = i_stone_current; is < i_stone; is++) {
+				for (Stone stone : candidates_by_i[is].getStones()) {
+					substring += String.format(" + x(%X)", map_candidate.get(stone));
+				}
+			}
+			i_stone_current = i_stone;
+			appendsp(out, substring);
 			appendsp(out, "<=");
 			appendln(out, "1");
+			out.flush();
+			if (i_stone % 3 == 0) {
+				printWithTime(String.format("subject to: %d %%", i_stone * 100 / num_stones), System.out);
+			}
 		}
 		// 1番目に置いた石がちゃんと置かれている
 		printWithTime("subject to: first stone confirm 2", System.out);
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
 			appendsp(out, String.format("c%d:", i++));
-			appendsp(out, "+ y(%d)", i_stone);
+			appendsp(out, "+ y(%X)", i_stone);
 			for (Stone stone : candidates_by_i[i_stone].getStones()) {
-				appendsp(out, "- x(%d)", map_candidate.get(stone));
+				appendsp(out, "- x(%X)", map_candidate.get(stone));
 			}
 			appendsp(out, "<=");
 			appendln(out, "0");
 		}
+		out.flush();
 		// 順序と隣接
 		printWithTime("subject to: order and joint", System.out);
+		int size = list_candidate.size();
+		int num = size / num_stones;
 		for (int i_candidate = 0; i_candidate < list_candidate.size(); i_candidate++) {
 			Stone stone = list_candidate.get(i_candidate);
-			Set<Stone> stone_neighbors = neighbors.getNeighbors(stone);
-
+			Set<Stone> stone_neighbors = neighbors.getNeighbors(stone, false);
 			if (stone_neighbors.size() == 0) {
 				continue;
 			}
-			appendsp(out, String.format("c%d:", i++));
-			appendsp(out, "+ x(%d)", i_candidate);
-			appendsp(out, "- y(%d)", stone.getIStone());
-
 			int count = 0;
+			String s = String.format("c%d:", i++);
+			s += String.format("+ x(%X)", i_candidate);
+			s += String.format("- y(%X)", stone.getIStone());
 			for (Stone neighbor : stone_neighbors) {
 				if (stone.isFollowingAfter(neighbor)) {
 					count++;
-					appendsp(out, "- 2 x(%d)", map_candidate.get(neighbor));
+					s += String.format("- 2 x(%X)", map_candidate.get(neighbor));
 				}
 			}
 			if (count == 0) {
 				appendsp(out, String.format("c%d:", i++));
-				appendsp(out, "x(%d) + y(%d)", i_candidate, stone.getIStone());
+				appendsp(out, "x(%X) + y(%X)", i_candidate, stone.getIStone());
 				for (Stone neighbor : stone_neighbors) {
-					appendsp(out, "- 2 x(%d)", map_candidate.get(neighbor));
+					appendsp(out, "- 2 x(%X)", map_candidate.get(neighbor));
 				}
 				appendsp(out, "<=");
 				appendln(out, 0);
 				continue;
 			}
+			appendsp(out, s);
 			appendsp(out, "<=");
 			// 計算しなくてもよかった
 			appendln(out, -1);
+
+			if (i_candidate % num == 0) {
+				printWithTime(String.format("subject to: %d %%", i_candidate * 100 / size), System.out);
+				out.flush();
+			}
 		}
+		System.out.println();
 		// 変数
 		printWithTime("general", System.out);
 		appendln(out, "general");
 		appendln(out, "z");
+		out.flush();
 		printWithTime("binary", System.out);
 		appendln(out, "binary");
 		for (int j = 0; j < candidates.size(); j++) {
-			appendsp(out, String.format("x(%d)", j));
+			appendsp(out, String.format("x(%X)", j));
 		}
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
-			appendsp(out, String.format("y(%d)", i_stone));
+			appendsp(out, String.format("y(%X)", i_stone));
 		}
 		appendln(out, "");
+		out.flush();
 		printWithTime("exported as LP.", System.out);
-		return sb.toString();
-	}
-
-	private class SubstringFirstStoneConfirm1 {
-		private String substring = "";
-		private int i_stone_current = 0;
-
-		String appendFirstStoneConfirm1(int i_stone) {
-			for (int is = i_stone_current; is < i_stone; is++) {
-				for (Stone stone : candidates_by_i[is].getStones()) {
-					substring += String.format(" + x(%d)", map_candidate.get(stone));
-				}
-			}
-			i_stone_current = i_stone;
-			return substring;
-		}
 	}
 
 	private void appendln(FileWriter out, Object text, Object... args) throws IOException {
@@ -562,8 +571,7 @@ class Solver1 {
 			text = String.format(text.toString(), args);
 		}
 		out.write(text.toString());
-		out.append(" ");
-		out.flush();
+		out.write("\r\n");
 	}
 
 
@@ -572,8 +580,7 @@ class Solver1 {
 			text = String.format(text.toString(), args);
 		}
 		out.write(text.toString());
-		out.append("\r\n");
-		out.flush();
+		out.write(" ");
 	}
 
 	public Map<Integer, Map<Integer, String>> getAnswers() {
