@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdio>
 #include <map>
 #include <vector>
 #include <deque>
@@ -18,11 +19,14 @@ const int normal = 0,
       rot180 = 2,
       rot270 = 3,
       fliped = 4;
+std::string host;
+std::stringstream out;
+std::ostream& dump_out = std::cerr;
 std::istream& in = std::cin;
-std::ostream& out = std::cout;
+// std::ostream& out = buf; //std::cout;
 std::ostream& err = std::cerr;
 bool shuffle_flag = true;
-bool dump_flag = true;
+bool dump_flag = false;
 
 struct Position {
   int y, x;
@@ -75,6 +79,7 @@ int stone_number;
 Field initial_field;
 std::deque<Position> initial_empties;
 std::array<std::array<Stone, 8>, 256> stones;
+int max_score;
 
 void solve() {
   if (shuffle_flag) {
@@ -101,9 +106,11 @@ int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Posit
 
   f.answer[n] = answer_format(p, m);
   score += nowscore;
-  f.print_answer(score, c);
+  if (max_score < score) {
+    max_score = score;
+    f.print_answer(score, c);
+  }
   err << "score:" << score << ", ";
-
   for (auto np : candidates) {
     for (auto s : initial_field.candidates[np]) {
       if (s.i > n) {
@@ -150,7 +157,12 @@ bool check_pos(int y, int x) {
   return (0<= y && y < field_size) && (0 <= x && x < field_size);
 }
 
-int main() {
+int main(int argc, char**argv) {
+  if (argc < 2) {
+    err << "Usage: server_ipv4_address\n";
+    return 1;
+  }
+  host = argv[1];
   parse_input();
   get_candidates();
   solve();
@@ -163,47 +175,47 @@ int main() {
 void Field::dump() {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      if (raw[i][j] == empty_val) out.put('.');
-      else if (raw[i][j] < stone_number) out.put('@');
-      else                        out.put('#');
+      if (raw[i][j] == empty_val) dump_out.put('.');
+      else if (raw[i][j] < stone_number) dump_out.put('@');
+      else                        dump_out.put('#');
     }
-    out.put('\n');
+    dump_out.put('\n');
   }
 }
 
 void Field::dump(std::deque<Position>& ps) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      if (raw[i][j] < stone_number) out.put('@');
+      if (raw[i][j] < stone_number) dump_out.put('@');
       else if (std::find(ps.begin(), ps.end(), Position{i, j}) != ps.end())
-        out.put('_');
-      else if (raw[i][j] == empty_val) out.put('.');
-      else                        out.put('#');
+        dump_out.put('_');
+      else if (raw[i][j] == empty_val) dump_out.put('.');
+      else                        dump_out.put('#');
     }
-    out.put('\n');
+    dump_out.put('\n');
   }
 }
 void Field::dump(std::deque<Position>& ps, Position p) {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      if (Position{i, j} == p) out.put('*');
-      else if (raw[i][j] < stone_number) out.put('@');
+      if (Position{i, j} == p) dump_out.put('*');
+      else if (raw[i][j] < stone_number) dump_out.put('@');
       else if (std::find(ps.begin(), ps.end(), Position{i, j}) != ps.end())
-        out.put('_');
-      else if (raw[i][j] == empty_val) out.put('.');
-      else                        out.put('#');
+        dump_out.put('_');
+      else if (raw[i][j] == empty_val) dump_out.put('.');
+      else                        dump_out.put('#');
     }
-    out.put('\n');
+    dump_out.put('\n');
   }
 }
 
 void Stone::dump() {
   for (int i = 0; i < stone_size; ++i) {
     for (int j = 0; j < stone_size; ++j) {
-      if (raw[i][j] == empty_val) out.put('.');
-      else                        out.put('@');
+      if (raw[i][j] == empty_val) dump_out.put('.');
+      else                        dump_out.put('@');
     }
-    out.put('\n');
+    dump_out.put('\n');
   }
 }
 
@@ -320,8 +332,13 @@ std::string answer_format(Position p, int n) {
 }
 
 void Field::print_answer(int score, int c) {
+  FILE* client = popen(("java SubmitClient " + host).c_str(), "w");
+  if (client == NULL) return;
+
   out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
   for (int i = 0; i < stone_number; ++i) {
     out << answer[i] << "\r\n";
   }
+  fprintf(client, "%s\r\n", out.str().c_str());
+  pclose(client);
 }
