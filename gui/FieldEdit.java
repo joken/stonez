@@ -196,9 +196,9 @@ public class FieldEdit extends PApplet {
 			}
 			break;
 		case 90:
-			for(int i = 0; i < Field.STONE_SIZE; i++){
-				for(int j = Field.STONE_SIZE -1; j >= 0; j--){
-					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = 0; j > -Field.STONE_SIZE; j--){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j + Field.STONE_SIZE -1][i],zf;
 							if (Zmouse1 + j< Field.FIELD_SIZE &&
 									Zmouse2 + i < Field.FIELD_SIZE) {
 								zf = field[Zmouse1 + j][Zmouse2 + i];
@@ -245,7 +245,7 @@ public class FieldEdit extends PApplet {
 			break;
 		case 181:
 			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
-				for(int j = 0  -1; j < Field.STONE_SIZE; j++){
+				for(int j = 0; j < Field.STONE_SIZE; j++){
 					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
 							if (Zmouse1 + j< Field.FIELD_SIZE &&
 									Zmouse2 + i < Field.FIELD_SIZE) {
@@ -269,7 +269,7 @@ public class FieldEdit extends PApplet {
 			break;
 		case 270:
 			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
-				for(int j = 0  -1; j < Field.STONE_SIZE; j++){
+				for(int j = 0; j < Field.STONE_SIZE; j++){
 					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
 							if (Zmouse1 + j< Field.FIELD_SIZE &&
 									Zmouse2 + i < Field.FIELD_SIZE) {
@@ -340,6 +340,7 @@ public class FieldEdit extends PApplet {
 			}
 			break;
 		}
+		System.out.println(cache.toString());
 		if(cache.isEmpty() || cache.size() != stonepos.size()){
 			status = "out of field or Overriding";
 			return;
@@ -353,6 +354,7 @@ public class FieldEdit extends PApplet {
 		});
 		status = this.CurrentStoneIndex + " put";
 		this.CurrentStoneIndex++;
+		stonepos.clear();
 	}
 
 	private int[] searchpos(){
