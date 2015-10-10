@@ -21,6 +21,7 @@ const int normal = 0,
       fliped = 4;
 std::string host;
 std::string cur;
+std::string classpath;
 std::stringstream out;
 std::ostream& dump_out = std::cerr;
 std::istream& in = std::cin;
@@ -161,12 +162,13 @@ bool check_pos(int y, int x) {
 }
 
 int main(int argc, char**argv) {
-  if (argc < 2) {
-    err << "Usage ipv4\n";
+  if (argc < 3) {
+    err << "Usage <path of SubmitClient.class> <ipv4 address>\n";
     return 1;
   }
   cur = argv[0];
-  host = argv[1];
+  classpath = argv[1];
+  host = argv[2];
   parse_input();
   get_candidates();
   solve();
@@ -374,7 +376,7 @@ void WinSubmit() {
   SetCurrentDirectory(getPath(cur).c_str());
 
   PROCESS_INFORMATION pi = {};
-  CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
+  CreateProcess(NULL, LPTSTR(("java " + classpath +  " " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
   childProcess = pi.hProcess;
   CloseHandle(pi.hThread);
   CloseHandle(readPipe);
@@ -387,7 +389,7 @@ void WinSubmit() {
 }
 #else
 void Field::print_answer(int score, int c) {
-  FILE* client = popen(("java SubmitClient " + host).c_str(), "w");
+  FILE* client = popen(("java " + classpath + " " + host).c_str(), "w");
   if (client == NULL) return;
 
   out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
