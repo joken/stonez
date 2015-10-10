@@ -366,14 +366,14 @@ void WinSubmit() {
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
   PROCESS_INFORMATION pi = {};
-  CreateProcess(NULL, ("java SubmitClient " + host).c_str(), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
+  CreateProcess(NULL, LPSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
   childProcess = pi.hProcess;
   CloseHandle(pi.hThread);
   CloseHandle(readPipe);
   readPipe = NULL;
 
 
-  WriteFile(writePipe, out.str().c_str(), out.str().c_str().size(), NULL, NULL);
+  WriteFile(writePipe, out.str().c_str(), out.str().size(), NULL, NULL);
   CloseHandle(writePipe);
   writePipe = NULL;
   WaitForSingleObject(childProcess, INFINITE);
