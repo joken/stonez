@@ -374,7 +374,7 @@ void WinSubmit() {
   setCurrentDirectory(getPath(cur).c_str());
 
   PROCESS_INFORMATION pi = {};
-  CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, currentDir, &si, &pi);
+  CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
   childProcess = pi.hProcess;
   CloseHandle(pi.hThread);
   CloseHandle(readPipe);
