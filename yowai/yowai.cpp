@@ -371,7 +371,7 @@ void WinSubmit() {
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
-  setCurrentDirectory(getPath(cur).c_str());
+  SetCurrentDirectory(getPath(cur).c_str());
 
   PROCESS_INFORMATION pi = {};
   CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
