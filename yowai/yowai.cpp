@@ -94,6 +94,8 @@ void solve() {
     }
   }
 }
+int bfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Position> candidates) {
+}
 int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Position> candidates) {
   int score = 0;
 
@@ -158,14 +160,12 @@ bool check_pos(int y, int x) {
 }
 
 int main(int argc, char**argv) {
-  if (argc < 2) {
-    err << "Usage: server_ipv4_address\n";
-    return 1;
-  }
-  host = argv[1];
   parse_input();
+  err << "Hey\n";
   get_candidates();
+  err << "Hey\n";
   solve();
+  err << "Hey\n";
 
   return 0;
 }
@@ -331,6 +331,7 @@ std::string answer_format(Position p, int n) {
   return base;
 }
 
+#ifdef __unix__
 void Field::print_answer(int score, int c) {
   FILE* client = popen(("java SubmitClient " + host).c_str(), "w");
   if (client == NULL) return;
@@ -342,3 +343,48 @@ void Field::print_answer(int score, int c) {
   fprintf(client, "%s\r\n", out.str().c_str());
   pclose(client);
 }
+
+#elif defined(_WIN32) || defined(WIN32)
+
+void WinSubmit();
+void Field::print_answer(int score, int c) {
+
+  out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
+  for (int i = 0; i < stone_number; ++i) {
+    out << answer[i] << "\r\n";
+  }
+  WinSubmit();
+}
+void WinSubmit() {
+  HANDLE readPipe = NULL, writePipe = NULL;
+  HANDLE readTemp;
+  HANDLE childProcess = NULL;
+
+  CreatePipe(&readTemp, &writePipe, NULL, 0);
+  DuplicateHandle(GetCurrentProcess(), readTemp, GetCurrentProcess(), &readPipe, 0, true, DUPLICATE_SAME_ACCESS);
+  CloseHandle(readTemp);
+
+  bool bInheritHandles = true;
+  DWORD creationFlags = 0;
+
+  STARTUPINFO si = {};
+  si.cb = sizeof(STARTUPINFO);
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = readPipe;
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
+  PROCESS_INFORMATION pi = {};
+  CreateProcess(NULL, ("java SubmitClient " + host).c_str(), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
+  childProcess = pi.hProcess;
+  CloseHandle(pi.hThread);
+  CloseHandle(readPipe);
+  readPipe = NULL;
+
+
+  WriteFile(writePipe, out.str().c_str(), out.str().c_str().size(), NULL, NULL);
+  CloseHandle(writePipe);
+  writePipe = NULL;
+  WaitForSingleObject(childProcess, INFINITE);
+}
+#endif
