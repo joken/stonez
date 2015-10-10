@@ -20,6 +20,8 @@ const int normal = 0,
       rot270 = 3,
       fliped = 4;
 std::string host;
+std::string cur;
+std::string classpath;
 std::stringstream out;
 std::ostream& dump_out = std::cerr;
 std::istream& in = std::cin;
@@ -83,7 +85,7 @@ int max_score;
 
 void solve() {
   if (shuffle_flag) {
-    std::shuffle(initial_empties.begin(), initial_empties.end(), std::default_random_engine{});
+    std::shuffle(initial_empties.begin(), initial_empties.end(), std::mt19937{std::random_device{}()});
   }
   std::deque<Position> empty_list; empty_list.clear();
   for (auto p : initial_empties) {
@@ -94,6 +96,27 @@ void solve() {
     }
   }
 }
+// struct Arg{
+//   int c,
+//       nowscore,
+//       n, m;
+//   Position p;
+//   Field f;
+//   std::deque<Position> candidates;
+// };
+// int bfs() {
+//   std::deque<Arg> args;
+//   if (shuffle_flag) {
+//     std::shuffle(initial_empties.begin(), initial_empties.end(), std::mt19937{std::random_device{}()});
+//   }
+//   std::deque<Position> empty_list; empty_list.clear();
+//   for (auto p : initial_empties) {
+//     for (auto s : initial_field.candidates[p]) {
+//       args.emplace_back(Arg{});
+//     }
+//   }
+//
+// }
 int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Position> candidates) {
   int score = 0;
 
@@ -110,7 +133,7 @@ int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Posit
     max_score = score;
     f.print_answer(score, c);
   }
-  err << "score:" << score << ", ";
+  err << "score:" << initial_empties.size() - score << ", ";
   for (auto np : candidates) {
     for (auto s : initial_field.candidates[np]) {
       if (s.i > n) {
@@ -158,11 +181,13 @@ bool check_pos(int y, int x) {
 }
 
 int main(int argc, char**argv) {
-  if (argc < 2) {
-    err << "Usage: server_ipv4_address\n";
+  if (argc < 3) {
+    err << "Usage <path of SubmitClient.class> <ipv4 address>\n";
     return 1;
   }
-  host = argv[1];
+  cur = argv[0];
+  classpath = argv[1];
+  host = argv[2];
   parse_input();
   get_candidates();
   solve();
@@ -240,8 +265,9 @@ void parse_input() {
 void parse_field() {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      if ((initial_field.raw[i][j] = get()) == empty_val)
+      if ((initial_field.raw[i][j] = get()) == empty_val) {
         initial_empties.emplace_back(Position{i, j});
+      }
     }
     br();
   }
@@ -331,8 +357,59 @@ std::string answer_format(Position p, int n) {
   return base;
 }
 
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(WIN64) || defined(_WIN64)
+
+#include <windows.h>
+
+void WinSubmit();
 void Field::print_answer(int score, int c) {
-  FILE* client = popen(("java SubmitClient " + host).c_str(), "w");
+
+  out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
+  for (int i = 0; i < stone_number; ++i) {
+    out << answer[i] << "\r\n";
+  }
+  WinSubmit();
+}
+std::string getPath(std::string s) {
+  auto p = s.rfind('\\');
+  return s.substr(0, p);
+}
+void WinSubmit() {
+  HANDLE readPipe = NULL, writePipe = NULL;
+  HANDLE readTemp;
+  HANDLE childProcess = NULL;
+
+  CreatePipe(&readTemp, &writePipe, NULL, 0);
+  DuplicateHandle(GetCurrentProcess(), readTemp, GetCurrentProcess(), &readPipe, 0, true, DUPLICATE_SAME_ACCESS);
+  CloseHandle(readTemp);
+
+  bool bInheritHandles = true;
+  DWORD creationFlags = 0;
+
+  STARTUPINFO si = {};
+  si.cb = sizeof(STARTUPINFO);
+  si.dwFlags = STARTF_USESTDHANDLES;
+  si.hStdInput = readPipe;
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
+  SetCurrentDirectory(getPath(cur).c_str());
+
+  PROCESS_INFORMATION pi = {};
+  CreateProcess(NULL, LPTSTR(("java " + classpath +  " " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
+  childProcess = pi.hProcess;
+  CloseHandle(pi.hThread);
+  CloseHandle(readPipe);
+  readPipe = NULL;
+
+  WriteFile(writePipe, out.str().c_str(), out.str().size(), NULL, NULL);
+  CloseHandle(writePipe);
+  writePipe = NULL;
+  WaitForSingleObject(childProcess, INFINITE);
+}
+#else
+void Field::print_answer(int score, int c) {
+  FILE* client = popen(("java " + classpath + " " + host).c_str(), "w");
   if (client == NULL) return;
 
   out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
@@ -342,3 +419,5 @@ void Field::print_answer(int score, int c) {
   fprintf(client, "%s\r\n", out.str().c_str());
   pclose(client);
 }
+
+#endif

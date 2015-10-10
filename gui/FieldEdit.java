@@ -80,10 +80,10 @@ public class FieldEdit extends PApplet {
 						i * Field.ZUKU_SIZE + Field.FIELD_BASE);
 				//System.out.println(field[j][i].getX() + " , "
 						//+ field[j][i].getY());デバッグ
-				System.out.printf("%d,%d,%d\n",
+				/*System.out.printf("%d,%d,%d\n",
 						field[j][i].getState().getRed(),
 						field[j][i].getState().getGreen(),
-						field[j][i].getState().getBlue());
+						field[j][i].getState().getBlue());*/
 				fill(field[j][i].getState().getRed(),
 						field[j][i].getState().getGreen(),
 						field[j][i].getState().getBlue(),
@@ -136,64 +136,225 @@ public class FieldEdit extends PApplet {
 	}
 
 	private void stoneput(){
-		//各石座標取得 -> それがNONEに入ってるか探索(クソース)
-		//ArrayList<ZukuState> suiren = new ArrayList<ZukuState>();
 		ArrayList<LinkedHashMap<Integer,Integer>> cache
 				= new ArrayList<>();
+		if(searchpos() == null){
+			status = "out of field";
+			return;
+		}
 		int Zmouse1 = searchpos()[0]
 		,Zmouse2 = searchpos()[1];
-		for(int i = 0; i < Field.STONE_SIZE; i++){
-			for(int j = 0; j < Field.STONE_SIZE; j++){
-				ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],
-						zf = field[Zmouse1 + j][Zmouse2 + i];
-				if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
-					LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
-					l.put(Zmouse1 + j, Zmouse2 + i);
-					cache.add(l);
-					//suiren.add(zf);
+		System.out.println(String.valueOf(Zmouse1) +","+ String.valueOf(Zmouse2));
+		//回転と反転を見極める長ったらしいヤツ
+		switch(stones.getAngle() + stones.getreverse()){
+		case 1:
+			for(int i = 0; i < Field.STONE_SIZE; i++){
+				for(int j = Field.STONE_SIZE -1; j >= 0; j--){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
 				}
 			}
+			break;
+		case 91:
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = Field.STONE_SIZE  -1; j >= 0; j--){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
+		case 90:
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = 0; j > -Field.STONE_SIZE; j--){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j + Field.STONE_SIZE -1][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
+		case 180:
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = Field.STONE_SIZE  -1; j >= 0; j--){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
+		case 181:
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = 0; j < Field.STONE_SIZE; j++){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
+		case 270:
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = 0; j < Field.STONE_SIZE; j++){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
+		case 271:
+			for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+				for(int j = Field.STONE_SIZE  -1; j >= 0; j--){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
+		default:
+			for(int i = 0; i < Field.STONE_SIZE; i++){
+				for(int j = 0; j < Field.STONE_SIZE; j++){
+					ZukuState z = stones.getStone(CurrentStoneIndex)[j][i],zf;
+							if (Zmouse1 + j< Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE) {
+								zf = field[Zmouse1 + j][Zmouse2 + i];
+							}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+									Zmouse2 + i < Field.FIELD_SIZE){
+								zf = field[Field.FIELD_SIZE -1][Zmouse2 + i];
+							}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+									Zmouse2 + i >= Field.FIELD_SIZE){
+								zf = field[Zmouse1 + j][Field.FIELD_SIZE -1];
+							}else{
+								zf = field[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+							}
+					if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+						LinkedHashMap<Integer,Integer> l = new LinkedHashMap<>();
+						l.put(Zmouse1 + j, Zmouse2 + i);
+						cache.add(l);
+					}
+				}
+			}
+			break;
 		}
-			/*fieldpos.forEach((index2,List2) -> {
-				int fx = (int)List2.get(0),fy = (int)List2.get(1);
-				ZukuState z = (ZukuState)List2.get(2);
-				if(mouseX >= fx && mouseX < fx + Field.ZUKU_SIZE
-					&& mouseY >= fy && mouseY < fy + Field.ZUKU_SIZE){
-
-				}
-				System.out.println(sx +","+ sy +","+ fx +","+ fy);
-				if(!z.isPutable()){
-					this.status = "out of field or Overrding";
-					return;
-				}
-				if(sx >= fx && sx < fx + Field.ZUKU_SIZE
-						&& sy >= fy && sy < fy + Field.ZUKU_SIZE
-						&& z.isPutable()){
-					System.out.println("found");
-					stones.getLP(new LinkedHashMap<Integer,Integer>(){{
-						put((z.getX() - Field.FIELD_BASE)/Field.ZUKU_SIZE
-						,(z.getY() - Field.FIELD_BASE)/Field.ZUKU_SIZE);}});
-					suiren.add(z);
-				}
-			});*/
-		/*if(suiren.isEmpty()){
+		System.out.println(cache.toString());
+		if(cache.isEmpty() || cache.size() != stonepos.size()){
 			status = "out of field or Overriding";
 			return;
 		}
-		if (stonepos.size() == suiren.size()) {
-			suiren.forEach(z ->
-				z = ZukuState.PUTSTONE);
-		}else{
-			status = "out of field or Overriding";
-			return;
-		}*/
-		if(cache.isEmpty()){
-			status = "out of field or Overriding";
-			return;
-		}
-		//cache.forEach();
+		cache.get(0).forEach((x,y) ->
+		System.out.printf(stones.getLP(x -7, y -7)));
+		cache.forEach(map -> {
+			map.forEach((x,y) -> {
+				field[x][y] = ZukuState.PUTSTONE;
+			});
+		});
 		status = this.CurrentStoneIndex + " put";
 		this.CurrentStoneIndex++;
+		stonepos.clear();
 	}
 
 	private int[] searchpos(){
@@ -209,7 +370,7 @@ public class FieldEdit extends PApplet {
 				cur++;
 			}
 		}
-		return new int[]{mouseX,mouseY};
+		return null;
 	}
 
 	private void rotate(){
