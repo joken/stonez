@@ -160,12 +160,14 @@ bool check_pos(int y, int x) {
 }
 
 int main(int argc, char**argv) {
+  if (argc < 2) {
+    err << "Usage ipv4\n";
+    return 1;
+  }
+  host = argv[1];
   parse_input();
-  err << "Hey\n";
   get_candidates();
-  err << "Hey\n";
   solve();
-  err << "Hey\n";
 
   return 0;
 }
