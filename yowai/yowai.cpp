@@ -20,6 +20,7 @@ const int normal = 0,
       rot270 = 3,
       fliped = 4;
 std::string host;
+std::string cur;
 std::stringstream out;
 std::ostream& dump_out = std::cerr;
 std::istream& in = std::cin;
@@ -164,6 +165,7 @@ int main(int argc, char**argv) {
     err << "Usage ipv4\n";
     return 1;
   }
+  cur = argv[0];
   host = argv[1];
   parse_input();
   get_candidates();
@@ -346,11 +348,14 @@ void Field::print_answer(int score, int c) {
   }
   WinSubmit();
 }
+std::string getPath(std::string s) {
+  auto p = s.rfind('\\');
+  return s.substr(0, p);
+}
 void WinSubmit() {
   HANDLE readPipe = NULL, writePipe = NULL;
   HANDLE readTemp;
   HANDLE childProcess = NULL;
-  char currentDir[256]; 
 
   CreatePipe(&readTemp, &writePipe, NULL, 0);
   DuplicateHandle(GetCurrentProcess(), readTemp, GetCurrentProcess(), &readPipe, 0, true, DUPLICATE_SAME_ACCESS);
@@ -366,7 +371,7 @@ void WinSubmit() {
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
-  GetCurrentDirectory(256, currentDir);
+  setCurrentDirectory(getPath(cur).c_str());
 
   PROCESS_INFORMATION pi = {};
   CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, currentDir, &si, &pi);
