@@ -333,7 +333,7 @@ std::string answer_format(Position p, int n) {
   return base;
 }
 
-#if defined(_WIN32) || defined(WIN32)
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(WIN64) || defined(_WIN64)
 
 #include <windows.h>
 
