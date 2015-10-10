@@ -77,7 +77,9 @@ public class AnswerSubmitViewctrl {
 				return null;
 			}
 		};
-		LogArea.setText(t.getMessage());
 		new Thread(t).start();
+		while(t.isRunning()){
+			LogArea.setText(t.getMessage());
+		}
 	}
 }

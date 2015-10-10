@@ -11,9 +11,9 @@ import java.util.ArrayList;
 
 public class Field {
 	public static final int ZUKU_SIZE = 15;
-	public static final int FIELD_SIZE = 32;
+	public static final int FIELD_SIZE = 39;
 	public static final int STONE_SIZE = 8;
-	public static final int FIELD_BASE = 150;
+	public static final int FIELD_BASE = 50;
 
 	private ZukuState[][] zstate;
 	private Stone stones;
@@ -28,7 +28,8 @@ public class Field {
 		  STONE(1),//石を置いてる
 		  OBSTACLE(2),//最初からある障害物
 		  TRANSPARENCY(3),//からっぽでみえない(石情報の石ではない部分)
-		  PUTSTONE(4);//置かれた石
+		  PUTSTONE(4),//置かれた石
+		  ILLEGALSTONE(5);//おかしな石
 
 		  private Color state;//色情報
 		  private int X,Y;//座標値
@@ -62,10 +63,12 @@ public class Field {
 			    }
 			}
 
+		@Deprecated
 		public void setStateToRed(){
 			state = new Color(0xFF0000);
 		}
 
+		@Deprecated
 		public void setStateToStonePut(){
 			state = new Color(0xB2CCFE);//薄い青
 			putable = false;
@@ -135,12 +138,24 @@ public class Field {
 		String suiren;//一時
 		StringBuffer data = new StringBuffer();//@return
 		synchronized (this) {
-			for (int i = 0; i < FIELD_SIZE; i++) {//Field情報取得
+			//7 x 32 の"置く座標にできる部分"
+			for(int i = 0; i < STONE_SIZE -1; i++){
+				for(int j = 0; j < FIELD_SIZE; j++){
+					zstate[j][i] = ZukuState.TRANSPARENCY;
+				}
+			}
+			for(int i = STONE_SIZE  -1; i < FIELD_SIZE; i++){
+				for(int j = 0; j < STONE_SIZE -1 ; j++){
+					zstate[j][i] = ZukuState.TRANSPARENCY;
+				}
+			}
+			for (int i = STONE_SIZE  -1; i < FIELD_SIZE; i++){//Field情報取得
 				String a = in.readLine();
 				data.append(a + "\n");
+				int cur = 0;
 				char[] cl = a.toCharArray();
-				for (int j = 0; j < FIELD_SIZE; j++) {
-					switch (cl[j]) {
+				for (int j = STONE_SIZE -1 ; j < FIELD_SIZE; j++) {
+					switch (cl[cur]) {
 					case '0':
 						zstate[j][i] = ZukuState.NONE;
 						break;
@@ -150,6 +165,7 @@ public class Field {
 					default:
 						zstate[j][i] = ZukuState.OBSTACLE;
 					}
+					cur++;
 				}
 			}
 		}
