@@ -96,8 +96,27 @@ void solve() {
     }
   }
 }
-int bfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Position> candidates) {
-}
+// struct Arg{
+//   int c,
+//       nowscore,
+//       n, m;
+//   Position p;
+//   Field f;
+//   std::deque<Position> candidates;
+// };
+// int bfs() {
+//   std::deque<Arg> args;
+//   if (shuffle_flag) {
+//     std::shuffle(initial_empties.begin(), initial_empties.end(), std::mt19937{std::random_device{}()});
+//   }
+//   std::deque<Position> empty_list; empty_list.clear();
+//   for (auto p : initial_empties) {
+//     for (auto s : initial_field.candidates[p]) {
+//       args.emplace_back(Arg{});
+//     }
+//   }
+//
+// }
 int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Position> candidates) {
   int score = 0;
 
@@ -246,8 +265,9 @@ void parse_input() {
 void parse_field() {
   for (int i = 0; i < field_size; ++i) {
     for (int j = 0; j < field_size; ++j) {
-      if ((initial_field.raw[i][j] = get()) == empty_val)
+      if ((initial_field.raw[i][j] = get()) == empty_val) {
         initial_empties.emplace_back(Position{i, j});
+      }
     }
     br();
   }
