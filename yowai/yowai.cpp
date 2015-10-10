@@ -333,20 +333,7 @@ std::string answer_format(Position p, int n) {
   return base;
 }
 
-#ifdef __unix__
-void Field::print_answer(int score, int c) {
-  FILE* client = popen(("java SubmitClient " + host).c_str(), "w");
-  if (client == NULL) return;
-
-  out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
-  for (int i = 0; i < stone_number; ++i) {
-    out << answer[i] << "\r\n";
-  }
-  fprintf(client, "%s\r\n", out.str().c_str());
-  pclose(client);
-}
-
-#elif defined(_WIN32) || defined(WIN32)
+#if defined(_WIN32) || defined(WIN32)
 
 #include <windows.h>
 
@@ -391,4 +378,17 @@ void WinSubmit() {
   writePipe = NULL;
   WaitForSingleObject(childProcess, INFINITE);
 }
+#else
+void Field::print_answer(int score, int c) {
+  FILE* client = popen(("java SubmitClient " + host).c_str(), "w");
+  if (client == NULL) return;
+
+  out << initial_empties.size() - score << " " << c << " " << stone_number << "\r\n";
+  for (int i = 0; i < stone_number; ++i) {
+    out << answer[i] << "\r\n";
+  }
+  fprintf(client, "%s\r\n", out.str().c_str());
+  pclose(client);
+}
+
 #endif
