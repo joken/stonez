@@ -350,6 +350,7 @@ void WinSubmit() {
   HANDLE readPipe = NULL, writePipe = NULL;
   HANDLE readTemp;
   HANDLE childProcess = NULL;
+  char currentDir[256]; 
 
   CreatePipe(&readTemp, &writePipe, NULL, 0);
   DuplicateHandle(GetCurrentProcess(), readTemp, GetCurrentProcess(), &readPipe, 0, true, DUPLICATE_SAME_ACCESS);
@@ -365,8 +366,10 @@ void WinSubmit() {
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
+  GetCurrentDirectory(256, currentDir);
+
   PROCESS_INFORMATION pi = {};
-  CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, NULL, &si, &pi);
+  CreateProcess(NULL, LPTSTR(("java SubmitClient " + host).c_str()), NULL, NULL,bInheritHandles, creationFlags, NULL, currentDir, &si, &pi);
   childProcess = pi.hProcess;
   CloseHandle(pi.hThread);
   CloseHandle(readPipe);
