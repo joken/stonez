@@ -69,6 +69,7 @@ class Stone {
 	public void place(StoneBucket[] candidates_by_i, StoneBucket[][] candidates_by_position, Neighbors neighbors) {
 		checkStatusObject();
 		if (!status.is(State.READY)) {
+			System.err.println(this);
 			throw new IllegalStateException();
 		}
 		// おなじ石番号の候補

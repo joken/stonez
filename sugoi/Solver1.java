@@ -1,8 +1,15 @@
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.sql.Time;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +33,9 @@ class Solver1 {
 	private static final char CHAR_STONE_MULTI = '2';
 	private static final char CHAR_INVALID = 'X';
 	private static final char CHAR_CANDIDATE = '+';
+
+	/** ビーム幅 */
+	private static final int WIDTH_BEAM = 3;
 
 	/** 全部の石の数 */
 	private int num_stones;
@@ -59,6 +69,9 @@ class Solver1 {
 
 	/** 解答とスコアおよび石数 */
 	private Map<Integer, Map<Integer, String>> answers;
+
+	/** 2つの石候補のずく数の比較器 */
+	private Comparator<? super Stone> comparator = (a, b) -> Integer.compare(num_zk_stone[a.getIStone()], num_zk_stone[b.getIStone()]);
 
 	public Solver1(Scanner in) {
 		// 読み込み
@@ -248,6 +261,44 @@ class Solver1 {
 		return indexes;
 	}
 
+	public void solveBeam() {
+		// 解く
+		printWithTime("solving...", System.out);
+		// 一つ目を選んで置く
+		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
+			for (Stone stone_first : candidates_by_i[i_stone].getStones()) {
+				// 配置をリセット (全部の石の候補の状態を裏からリセット)
+				status_candidate.reset();
+//				neighbors.clear();
+				// えんきゅー
+				Deque<Stone> queue = new ArrayDeque<Stone>();
+				queue.offer(stone_first);
+				while (!queue.isEmpty()) {
+					Stone stone = queue.poll();
+					// おけなくなっていた
+					if (!stone.isReady()) {
+						continue;
+					}
+					// おく
+					stone.place(candidates_by_i, candidates_by_position, neighbors);
+					// dump
+					System.out.println(dumpField());
+					System.out.println("SCORE: " + getScore());
+					// えんきゅー
+					Set<Stone> stones_neighbor = neighbors.getNeighborsFollowing(stone, false);
+					for (int i = 0; i < WIDTH_BEAM && stones_neighbor.size() > 0; i++) {
+						Stone stone_sugoi = stones_neighbor.stream().max(comparator).get();
+						stones_neighbor.remove(stone_sugoi);
+						queue.offer(stone_sugoi);
+					}
+				}
+				// 提出
+				submit();
+			}
+		}
+		printWithTime("solved.", System.out);
+	}
+
 	public void solve() {
 		// 解く
 		printWithTime("solving...", System.out);
@@ -256,8 +307,14 @@ class Solver1 {
 			for (Stone stone : candidates_by_i[i_stone].getStones()) {
 				// 配置をリセット (全部の石の候補の状態を裏からリセット)
 				status_candidate.reset();
+//				neighbors.clear();
 				// 解く
 				solve(stone);
+				// dump
+				System.out.println(dumpField());
+				System.out.println("SCORE: " + getScore());
+				// 提出
+				submit();
 			}
 		}
 		printWithTime("solved.", System.out);
@@ -268,24 +325,9 @@ class Solver1 {
 		stone_placed.place(candidates_by_i, candidates_by_position, neighbors);
 		// 解答をまとめる
 		int score = getScore();
-		System.out.print(dumpField());
-		System.out.println("SCORE: " + score);
-		if (score <= STOP_AT) {
-			long num_stones_placed = countPlacedStones();
-			String answer_string = export();
-			if (!answers.containsKey(score)) {
-				answers.put(score, new HashMap<Integer, String>(num_stones, 1.0f));
-			}
-			answers.get(score).put((int) num_stones_placed, answer_string);
-			if (score < 10) {
-				System.out.println(dumpField());
-			}
-			System.out.printf("SCORE: %3d, STONES: %3d\r\n", score, num_stones_placed);
-			return;
-		}
 		// 隣接する石を探索
 		for (Stone stone : status_candidate.getStonesEdge()) {
-			for (Stone stone_neighbor : neighbors.getNeighbors(stone)) {
+			for (Stone stone_neighbor : neighbors.getNeighborsFollowing(stone, true)) {
 				// 石の順序と配置状態を確認して置く
 				if (stone_neighbor.isFollowingAfter(stone_placed) && stone_neighbor.isReady()) {
 //					State[] tmp = status_candidate.save();
@@ -295,7 +337,6 @@ class Solver1 {
 			}
 		}
 	}
-
 
 	public int getScore() {
 		int score = num_zk_field;
@@ -408,35 +449,41 @@ class Solver1 {
 		String[] y_str = new String[num_stones];
 		String[] x_str = new String[candidates.size()];
 		int i = 0;
-		StringBuilder sb = new StringBuilder();
-		String str = "";
+		StringBuilder sb = new StringBuilder(1024 * 1024 * 1024);
 		printWithTime("exporting as LP...", System.out);
 		printWithTime("minimize", System.out);
 		sb.append("minimize\r\n");
-		sb.append("z\r\n");
+		sb.append("z + s\r\n");
 		printWithTime("subject to", System.out);
 		sb.append("subject to\r\n");
 		// 目的関数の制約
 		// スコアを小さく
 		printWithTime("subject to: score", System.out);
-		sb.append(String.format("c%d:", i++) + " ");
+		sb.append("c");
+		sb.append(i++);
+		sb.append(": ");
 		for (int i_candidate = 0; i_candidate < candidates.size(); i_candidate++) {
 			map_candidate.put(list_candidate.get(i_candidate), i_candidate);
-			x_str[i_candidate] = String.format("x(%X)", i_candidate);
-			sb.append("- " + num_zk_stone[list_candidate.get(i_candidate).getIStone()] + " " + x_str[i_candidate] + " ");
+			x_str[i_candidate] = new StringBuilder("x").append(Integer.toString(i_candidate, 36)).toString();
+			sb.append(" - ");
+			sb.append(num_zk_stone[list_candidate.get(i_candidate).getIStone()]);
+			sb.append(" ");
+			sb.append(x_str[i_candidate]);
+			sb.append(" ");
 		}
-		sb.append("- z <= ");
-		sb.append("- " + num_zk_field + "\r\n");
+		sb.append("- z <= - ");
+		sb.append(num_zk_field);
+		sb.append("\r\n");
 		// 使用石数を小さく
-//		printWithTime("subject to: number of stones", System.out);
-//		sb = new StringBuilder();
-//		for (int i_candidate = 0; i_candidate < list_candidate.size(); i_candidate++) {
-//			appendsp(out, "+ " + x_str[i_candidate]);
-//		}
-//		appendsp(out, "- z");
-//		appendsp(out, "<=");
-//		appendsp(out, "0");
-//		builder.addConstraint(sb.toString());
+		printWithTime("subject to: number of stones", System.out);
+		sb.append("c");
+		sb.append(i++);
+		sb.append(":");
+		for (int i_candidate = 0; i_candidate < list_candidate.size(); i_candidate++) {
+			sb.append(" + ");
+			sb.append(x_str[i_candidate]);
+		}
+		sb.append(" - s <= 0\r\n");
 		// out.flush();
 		// ある石番号の候補は1つしか置けない
 		printWithTime("subject to: i_stone", System.out);
@@ -444,11 +491,14 @@ class Solver1 {
 			if (stones.size() == 0) {
 				continue;
 			}
-			sb.append(String.format("c%d:", i++) + " ");
+			sb.append("c");
+			sb.append(i++);
+			sb.append(":");
 			for (Stone stone : stones.getStones()) {
-				sb.append("+ " + x_str[map_candidate.get(stone)] + " ");
+				sb.append(" + ");
+				sb.append(x_str[map_candidate.get(stone)]);
 			}
-			sb.append("<= 1\r\n");
+			sb.append(" <= 1\r\n");
 		}
 		// out.flush();
 		// ある位置に候補は1つしか置けない *
@@ -458,94 +508,129 @@ class Solver1 {
 				if (candidates_by_position[y][x].size() == 0) {
 					continue;
 				}
-				sb.append(String.format("c%d:", i++) + " ");
+				sb.append("c");
+				sb.append(i++);
+				sb.append(":");
 				for (Stone stone : candidates_by_position[y][x].getStones()) {
-					sb.append("+ " + x_str[map_candidate.get(stone)] + " ");
+					sb.append(" + ");
+					sb.append(x_str[map_candidate.get(stone)]);
 				}
-				sb.append("<= 1\r\n");
+				sb.append(" <= 1\r\n");
 			}
 		}
 		// out.flush();
 		// 1番目においた石が1つある
 		printWithTime("subject to: first stone", System.out);
-		sb.append(String.format("c%d:", i++) + " ");
+		sb.append("c");
+		sb.append(i++);
+		sb.append(":");
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
-			y_str[i_stone] = String.format("y(%X)", i_stone);
-			sb.append("+ " + y_str[i_stone] + " ");
+			y_str[i_stone] = new StringBuilder("y").append(Integer.toString(i_stone, 36)).toString();
+			sb.append(" + ");
+			sb.append(y_str[i_stone]);
 		}
-		sb.append("= 1\r\n");
+		sb.append(" = 1\r\n");
 		// out.flush();
 		// 1番目に置いた石の番号より小さい番号の石は置かれていない  30 sec
 		printWithTime("subject to: fiest stone confirm 1", System.out);
-		String substring = "";
+		StringBuilder substring = new StringBuilder();
 		int i_stone_current = 0;
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
-			sb.append(String.format("c%d:", i++) + " ");
-			sb.append("+ " + y_str[i_stone] + " ");
+			sb.append("c");
+			sb.append(i++);
+			sb.append(": + ");
+			sb.append(y_str[i_stone]);
+//			for (int is = 0; is < i_stone; is++) {
+//				for (Stone stone : candidates_by_i[is].getStones()) {
+//					sb.append(" + ");
+//					sb.append(x_str[map_candidate.get(stone)]);
+//				}
+//			}
 			for (int is = i_stone_current; is < i_stone; is++) {
 				for (Stone stone : candidates_by_i[is].getStones()) {
-					substring += " + " + x_str[map_candidate.get(stone)];
+					substring.append(" + ");
+					substring.append(x_str[map_candidate.get(stone)]);
 				}
 			}
 			i_stone_current = i_stone;
-			sb.append(substring + " ");
-			sb.append("<= 1\r\n");
+			sb.append(" ");
+			sb.append(substring);
+			sb.append(" <= 1\r\n");
 			// out.flush();
-			if (i_stone % 3 == 0) {
-				printWithTime(String.format("subject to: %d %%", i_stone * 100 / num_stones), System.out);
+			if (i_stone % 32 == 0) {
+				printWithTime(String.format("subject to: fiest stone confirm 1: %d %%", i_stone * 100 / num_stones), System.out);
+				String out_str = sb.toString();
+				sb = null;
+//				Runtime.getRuntime().gc();
+				out.write(out_str);
+				out.flush();
+				out_str = null;
+				Runtime.getRuntime().gc();
+				sb = new StringBuilder();
 			}
 		}
 		// 1番目に置いた石がちゃんと置かれている
 		printWithTime("subject to: first stone confirm 2", System.out);
 		for (int i_stone = 0; i_stone < num_stones; i_stone++) {
-			sb.append(String.format("c%d:", i++) + " ");
-			sb.append("+ " + y_str[i_stone] + " ");
+			sb.append("c");
+			sb.append(i++);
+			sb.append(": ");
+			sb.append("+ " + y_str[i_stone]);
 			for (Stone stone : candidates_by_i[i_stone].getStones()) {
-				sb.append("- " + x_str[map_candidate.get(stone)] + " ");
+				sb.append(" - " + x_str[map_candidate.get(stone)]);
 			}
-			sb.append("<= 0\r\n");
+			sb.append(" <= 0\r\n");
 		}
 		// out.flush();
 		// 順序と隣接
 		printWithTime("subject to: order and joint", System.out);
-		int size = list_candidate.size();
-		int num = size / num_stones;
-		for (int i_candidate = 0; i_candidate < list_candidate.size(); i_candidate++) {
-			if (i_candidate % num == 0) {
-				printWithTime(String.format("subject to: %d %%", i_candidate * 100 / size), System.out);
-				// out.flush();
-			}
-			Stone stone = list_candidate.get(i_candidate);
-			Set<Stone> stone_neighbors = neighbors.getNeighbors(stone, false);
-			if (stone_neighbors.size() == 0) {
-				continue;
-			}
-			int count = 0;
-			String s = String.format("c%d:", i++);
-			s += ("+ " + x_str[i_candidate]);
-			s += ("- " + y_str[stone.getIStone()]);
-			for (Stone neighbor : stone_neighbors) {
-				if (stone.isFollowingAfter(neighbor)) {
-					count++;
-					s += ("- 2 " + x_str[map_candidate.get(neighbor)]);
-				}
-			}
-			if (count == 0) {
-				sb.append(String.format("c%d:", i++) + " ");
-				sb.append(x_str[i_candidate] + " + " + y_str[stone.getIStone()] + " ");
-				for (Stone neighbor : stone_neighbors) {
-					sb.append("- 2 " + x_str[map_candidate.get(neighbor)] + " ");
-				}
-				sb.append("<= 0\r\n");
-				continue;
-			}
-			sb.append(s + " <= -1\r\n");
-		}
+//		int size = list_candidate.size();
+//		for (int i_candidate = 0; i_candidate < list_candidate.size(); i_candidate++) {
+//			if (i_candidate % 1024 == 0) {
+//				printWithTime(String.format("subject to: order and joint: %d %%", i_candidate * 100 / size), System.out);
+//				String out_str1 = sb.toString();
+//				sb = null;
+////				Runtime.getRuntime().gc();
+//				out.write(out_str1);
+//				out.flush();
+//				out_str1 = null;
+//				Runtime.getRuntime().gc();
+//				sb = new StringBuilder();
+//				// out.flush();
+//			}
+//			Stone stone = list_candidate.get(i_candidate);
+//			Set<Stone> stone_neighbors = neighbors.getNeighborsFollowing(stone, false);
+//			if (stone_neighbors.size() == 0) {
+//				stone_neighbors = neighbors.getNeighbors(stone, false);
+//				if (stone_neighbors.size() == 0) {
+//					continue;
+//				}
+//				sb.append("c");
+//				sb.append(i++);
+//				sb.append(": ");
+//				sb.append(y_str[stone.getIStone()]);
+//				sb.append(" - ");
+//				sb.append(x_str[i_candidate]);
+//				sb.append(" <= 0\r\n");
+//				continue;
+//			}
+//			sb.append("c");
+//			sb.append(i++);
+//			sb.append(": + ");
+//			sb.append(x_str[i_candidate]);
+//			sb.append(" - ");
+//			sb.append(y_str[stone.getIStone()]);
+//			for (Stone neighbor : stone_neighbors) {
+//				sb.append("- 2 ");
+//				sb.append(x_str[map_candidate.get(neighbor)]);
+//			}
+//			sb.append(" <= -1\r\n");
+//		}
 		System.out.println();
 		// 変数
 		printWithTime("general", System.out);
 		sb.append("general\r\n");
-		sb.append("z\r\n");
+		sb.append("z s\r\n");
 		// out.flush();
 		printWithTime("binary", System.out);
 		sb.append("binary\r\n");
@@ -585,14 +670,68 @@ class Solver1 {
 
 	public void importLP(Scanner lp) {
 		status_candidate.reset();
-		Pattern p = Pattern.compile("x\\((\\d+)\\)");
+		Pattern p = Pattern.compile("x([0-9a-z]+)");
 		while (lp.hasNextLine()) {
 			String line = lp.nextLine();
 			Matcher m = p.matcher(line);
 			if (m.find()) {
-				list_candidate.get(Integer.parseInt(m.group(1))).place(candidates_by_i, candidates_by_position, neighbors);
+				list_candidate.get(Integer.parseInt(m.group(1), 36)).place(candidates_by_i, candidates_by_position, neighbors);
 			}
 		}
+		// dump
 		System.out.println(dumpField());
+		System.out.println("SCORE: " + getScore());
+		// 提出
+		submit();
+	}
+
+	private void submit() {
+		String hostaddr = "10.0.2.71";
+
+		String answer = export();
+		int cout_lines = answer.split("\r\n").length;
+		answer = String.format("%d %d %d\r\n", getScore(), countPlacedStones(), cout_lines) + answer;
+
+		System.out.println("Connecting to " + hostaddr + "...");
+		try (
+			// 標準入力を準備
+			Scanner stdIn = new Scanner(answer);
+			// リモートに接続
+			Socket sock = new Socket(hostaddr, 65432);
+		) {
+			System.out.println("Connected.");
+
+			// リモートからの入力を準備
+			BufferedReader in = new BufferedReader(
+				new InputStreamReader(sock.getInputStream())
+			);
+			// リモートへの出力を準備
+			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
+
+			// 標準入力から解答を読む
+			// <想定フォーマット> := <スコア> <石数> <解答の行数>
+			int score = stdIn.nextInt();
+			int num_stones = stdIn.nextInt();
+			int num_lines = stdIn.nextInt();
+			// 改行を読み飛ばす
+			stdIn.nextLine();
+			// 解答を読み込む
+			String data = "";
+			for (int i = 0; i < num_lines; i++) {
+				data += stdIn.nextLine() + "\n";
+			}
+
+			// リモートに送信
+			out.printf("%d %d %d\n", score, num_stones, num_lines);
+			out.println(data);
+
+			// リモートからの応答を受信
+			String result = in.readLine();
+			System.out.printf("Reply from %s: %s\n", hostaddr, result);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(2);
+		}
 	}
 }

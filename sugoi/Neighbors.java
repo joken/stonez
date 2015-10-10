@@ -93,4 +93,69 @@ class Neighbors {
 		}
 		return stones;
 	}
+
+	public Set<Stone> getNeighborsFollowing(Stone stone_me, boolean cached) {
+		if (cached) {
+			Set<Stone> stones_neighbor;
+			if (!neighbors.containsKey(stone_me)) {
+				stones_neighbor = getNeighborsFollowing(stone_me, false);
+				neighbors.put(stone_me, new StoneBucket(stones_neighbor));
+			} else {
+				System.out.println("HIT");
+				stones_neighbor = neighbors.get(stone_me).getStones();
+			}
+			return stones_neighbor;
+		}
+		// 準備
+		int i_field_me = stone_me.getIField();
+		int value_me = stone_me.getValue();
+		int[] lines = stone_me.getStone();
+		// 膨張処理をして輪郭をとる
+		int[] work = new int[Stone.SIZE_STONE + 2];
+		for (int j_stone = 0; j_stone < Stone.SIZE_STONE; j_stone++) {
+			work[j_stone + 0] |= lines[j_stone] << 1;
+			work[j_stone + 1] |= lines[j_stone] | lines[j_stone] << 2;
+			work[j_stone + 2] |= lines[j_stone] << 1;
+		}
+		for (int j_stone = 0; j_stone < Stone.SIZE_STONE; j_stone++) {
+			work[j_stone + 1] &= ~ (lines[j_stone] << 1);
+		}
+		// 石候補から輪郭にかぶるものを返す
+		Set<Stone> stones = new HashSet<>(num_stones * StoneOperation.COUNT * CIRCUMFERENCE_STONE);
+		for (int j_work = 0; j_work < work.length; j_work++) {
+			int line = work[j_work];
+			if (line == 0) {
+				continue;
+			}
+			int index_i_field_put = i_field_me + j_work - 1;
+			if (index_i_field_put < 0) {
+				continue;
+			}
+			if (index_i_field_put >= Stone.SIZE_FIELD) {
+				break;
+			}
+			for (int value_work = 0; value_work < work.length; value_work++) {
+				if (((line >> (work.length - 1 - value_work)) & 1) == 1) {
+					int index_value_put = value_me + value_work - 1;
+					if (index_value_put < 0) {
+						continue;
+					}
+					if (index_value_put >= Stone.SIZE_FIELD) {
+						break;
+					}
+					for (Stone stone : candidates_by_position[index_i_field_put][index_value_put].getStones()) {
+						if (!stone.isReady() || stone_me.isFollowingAfter(stone)) {
+							continue;
+						}
+						stones.add(stone);
+					}
+				}
+			}
+		}
+		return stones;
+	}
+
+	public void clear() {
+		neighbors.clear();
+	}
 }
