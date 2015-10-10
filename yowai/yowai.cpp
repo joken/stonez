@@ -83,7 +83,7 @@ int max_score;
 
 void solve() {
   if (shuffle_flag) {
-    std::shuffle(initial_empties.begin(), initial_empties.end(), std::default_random_engine{});
+    std::shuffle(initial_empties.begin(), initial_empties.end(), std::mt19937{std::random_device{}()});
   }
   std::deque<Position> empty_list; empty_list.clear();
   for (auto p : initial_empties) {
