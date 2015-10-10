@@ -114,7 +114,7 @@ int dfs(int c, int nowscore, int n, int m, Position p, Field f, std::deque<Posit
     max_score = score;
     f.print_answer(score, c);
   }
-  err << "score:" << score << ", ";
+  err << "score:" << initial_empties.size() - score << ", ";
   for (auto np : candidates) {
     for (auto s : initial_field.candidates[np]) {
       if (s.i > n) {
