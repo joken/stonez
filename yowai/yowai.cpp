@@ -348,6 +348,8 @@ void Field::print_answer(int score, int c) {
 
 #elif defined(_WIN32) || defined(WIN32)
 
+#include <windows.h>
+
 void WinSubmit();
 void Field::print_answer(int score, int c) {
 
