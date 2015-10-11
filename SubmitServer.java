@@ -1,3 +1,5 @@
+package com.net.url;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -23,10 +25,10 @@ public class SubmitServer {
 		String token_str;
 		if (args.length >= 1 && args[0].equals("-p")) {
 			token_str = "0123456789abcdef";
-			spec = args.length == 2 ? args[1] : "http://testform26.procon-online.net/answer?token=" + token_str;
+			spec = args.length == 2 ? args[1] : "http://testform26.procon-online.net/answer";
 		} else {
 			token_str = "fe2e7a2191c446a6";
-			spec = "http://172.16.1.2/answer?token=" + token_str;
+			spec = "http://172.16.1.2/answer";
 		}
 		System.out.println("Server: " + spec);
 		try {
@@ -38,7 +40,7 @@ public class SubmitServer {
 				// 解答を受け付け
 				Answer answer = acceptAnswer();
 				// とりあえず表示
-				System.out.println(answer);
+//				System.out.println(answer);
 				// 提出
 				answer.submit(submitter);
 			}
@@ -66,11 +68,12 @@ public class SubmitServer {
 			score = sc.nextInt();
 			num_stones = sc.nextInt();
 			int num_lines = sc.nextInt();
+			System.err.println(num_lines);
 			// 改行を読み飛ばす
 			sc.nextLine();
 			// データを読む
 			for (int i = 0; i < num_lines; i++) {
-				data += sc.nextLine() + "\n";
+				data += sc.nextLine() + "\r\n";
 			}
 			// とりあえず表示
 			System.out.printf("[Received from %s]\n", sock.getInetAddress());

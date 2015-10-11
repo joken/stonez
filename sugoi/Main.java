@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -8,9 +9,9 @@ import java.util.Scanner;
 public class Main {
 
 	// SubmitServer のアドレス
-	static  String addr_submit = "192.168.2.4";
+	static  String addr_submit = "127.0.0.1";
 	// 開始石
-	static int begin = 0;
+	static int begin = 1;
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		// 自力で解く
@@ -23,7 +24,7 @@ public class Main {
 //		main_lp();
 	}
 
-	private static File file = new File("C:/users/joken/downloads/quest91.txt");
+	private static File file = new File("res/quest1.txt");
 
 	private static void mail_lp_read() throws FileNotFoundException {
 		File file_result = new File("C:/users/joken/desktop/procon.sol");

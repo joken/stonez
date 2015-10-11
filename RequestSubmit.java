@@ -1,6 +1,9 @@
+package com.net.url;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -10,6 +13,8 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Scanner;
+
+import com.procon.gui.FieldView;
 
 public class RequestSubmit {
 
@@ -102,26 +107,33 @@ public class RequestSubmit {
 			con.connect();
 			//接続の確認
 			if(con.getResponseCode() == HttpURLConnection.HTTP_OK){
-				//データ取得 -> stdout
+				//データ取得 -> File出力
 				BufferedReader im =
 						new BufferedReader(new InputStreamReader
 								(con.getInputStream()));
-				//1回改行
-				System.out.println();
+				BufferedWriter out = new BufferedWriter(
+						new FileWriter("quest"+FieldView.QUEST_NUM+".txt"));
+				//1回改行?
+				//out.newLine();
 				String line;
 				while((line = im.readLine()) != null){
-					System.out.println(line);
+					out.write(line);
+					out.newLine();
 				}
+				out.flush();
 				im.close();
+				out.close();
 			}else{//エラー
-				System.out.println("Error " + con.getResponseCode());
+				System.err.println("Error " + con.getResponseCode());
 				//さいしょにもどる
-				this.interactive();
+				//this.interactive();
+				return;
 			}
 		}catch (MalformedURLException e) {
 			e.printStackTrace();
-			System.out.println("無効なURL");
-			this.interactive();
+			System.err.println("無効なURL");
+			return;
+			//this.interactive();
 		}catch (ProtocolException e) {
 			e.printStackTrace();
 		}catch(IOException e){
@@ -211,7 +223,7 @@ public class RequestSubmit {
 }
 
 class Main{
-	/*
+	/**
 	 * URLとコマンドが引数にないと対話モード
 	 * @param args[0] URL
 	 * @param args[1] コマンド

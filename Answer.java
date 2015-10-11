@@ -1,3 +1,5 @@
+package com.net.url;
+
 
 public class Answer {
 	private int score;
