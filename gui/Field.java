@@ -207,14 +207,210 @@ public class Field {
 	public void setAns(String paragraph){
 		String[] lines = paragraph.split("\n");
 		for(int i = 0; i < lines.length; i++){
-			parse(lines[i]);
+			if (!lines[i].isEmpty()) {
+				parse(i, lines[i]);
+			}else{
+				continue;
+			}
 		}
+		FieldEdit.CurrentStoneIndex = lines.length;
 	}
 
 	//TODO パーサ実装
 	/**
 	 * 単行の回答フォーマットをParseする
+	 * @param count 何行目？？？
 	 * @param line 回答フォーマット(単行)
 	 * */
-	private void parse(String line){}
+	private void parse(int count, String line){
+		String[] args = line.split(" ");
+		for(int i = 0; i < Integer.parseInt(args[3])/90; i++){
+			stones.rotate();
+		}
+		if(args[2].equals("T")){
+			stones.reverse();
+		}
+		int Zmouse1 = Integer.parseInt(args[0]) + Field.STONE_SIZE
+				,Zmouse2 = Integer.parseInt(args[1]) + Field.STONE_SIZE;
+		//回転と反転を見極める長ったらしいヤツ
+				switch(stones.getAngle() + stones.getreverse()){
+				case 1:
+					for(int i = 0; i < Field.STONE_SIZE; i++){
+						for(int j = Field.STONE_SIZE -1; j >= 0; j--){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				case 91:
+					for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+						for(int j = Field.STONE_SIZE  -1; j >= 0; j--){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				case 90:
+					for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+						for(int j = 0; j > -Field.STONE_SIZE; j--){
+							ZukuState z = stones.getStone(count)[j + Field.STONE_SIZE -1][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				case 180:
+					for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+						for(int j = Field.STONE_SIZE  -1; j >= 0; j--){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				case 181:
+					for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+						for(int j = 0; j < Field.STONE_SIZE; j++){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				case 270:
+					for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+						for(int j = 0; j < Field.STONE_SIZE; j++){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				case 271:
+					for(int i = Field.STONE_SIZE -1; i >= 0; i--){
+						for(int j = Field.STONE_SIZE  -1; j >= 0; j--){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				default:
+					for(int i = 0; i < Field.STONE_SIZE; i++){
+						for(int j = 0; j < Field.STONE_SIZE; j++){
+							ZukuState z = stones.getStone(count)[j][i],zf;
+									if (Zmouse1 + j< Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE) {
+										zf = zstate[Zmouse1 + j][Zmouse2 + i];
+									}else if(Zmouse1 + j >= Field.FIELD_SIZE &&
+											Zmouse2 + i < Field.FIELD_SIZE){
+										zf = zstate[Field.FIELD_SIZE -1][Zmouse2 + i];
+									}else if(Zmouse1 + j < Field.FIELD_SIZE &&
+											Zmouse2 + i >= Field.FIELD_SIZE){
+										zf = zstate[Zmouse1 + j][Field.FIELD_SIZE -1];
+									}else{
+										zf = zstate[Field.FIELD_SIZE -1][Field.FIELD_SIZE -1];
+									}
+							if(z.equals(ZukuState.STONE) && zf.equals(ZukuState.NONE)){
+								zstate[j + STONE_SIZE][i + STONE_SIZE] = ZukuState.PUTSTONE;
+							}
+						}
+					}
+					break;
+				}
+				stones.reset();
+	}
 }

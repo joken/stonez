@@ -15,9 +15,12 @@ public class FieldEdit extends PApplet {
 	 */
 	private static final long serialVersionUID = 6769308402563936324L;
 
+	public static ArrayList<String> AnswerLine;
+	public static int Score;
+
 	private ZukuState[][] field;
 	private Stone stones;
-	private int CurrentStoneIndex;
+	public static int CurrentStoneIndex;
 	private String status;
 	private LinkedHashMap<Integer,ArrayList<Object>> fieldpos;
 	private LinkedHashMap<Integer,ArrayList<Integer>> stonepos;
@@ -30,6 +33,7 @@ public class FieldEdit extends PApplet {
 		status = "ok";
 		stonepos = new LinkedHashMap<>();
 		fieldpos = new LinkedHashMap<>();
+		AnswerLine = new ArrayList<String>();
 	}
 
 	public void draw(){
@@ -70,6 +74,11 @@ public class FieldEdit extends PApplet {
 			this.stoneput();
 			break;
 		}
+		switch(this.key){
+		case ' ':
+			FieldEdit.CurrentStoneIndex++;
+			status = "passed";
+		}
 	}
 
 	private void drawfield(){
@@ -109,12 +118,12 @@ public class FieldEdit extends PApplet {
 		translate(mouseX,mouseY);
 		this.rotate();
 		this.reverse();
+		if(FieldEdit.CurrentStoneIndex > stones.length){
+			FieldEdit.CurrentStoneIndex = 0;
+			this.status = "reuturned first stone";
+		}
 		for(int i = 0; i < Field.STONE_SIZE; i++){
 			for(int j = 0; j < Field.STONE_SIZE; j++){
-				if(this.CurrentStoneIndex > stones.length){
-					this.CurrentStoneIndex = 0;
-					this.status = "reuturned first stone";
-				}
 				ZukuState z = stones.getStone(CurrentStoneIndex)[j][i];
 				z.setXY(j * Field.ZUKU_SIZE,
 						i * Field.ZUKU_SIZE);
@@ -345,15 +354,18 @@ public class FieldEdit extends PApplet {
 			status = "out of field or Overriding";
 			return;
 		}
-		cache.get(0).forEach((x,y) ->
-		System.out.printf(stones.getLP(x -7, y -7)));
+		cache.get(0).forEach((x,y) ->{
+		System.out.printf(stones.getLP(x -8, y -8));
+		AnswerLine.add(stones.getLP(x -8, y -8));
+		Score = fieldpos.size() - stonepos.size();
+		});
 		cache.forEach(map -> {
 			map.forEach((x,y) -> {
 				field[x][y] = ZukuState.PUTSTONE;
 			});
 		});
-		status = this.CurrentStoneIndex + " put";
-		this.CurrentStoneIndex++;
+		status = FieldEdit.CurrentStoneIndex + " put";
+		FieldEdit.CurrentStoneIndex++;
 		stonepos.clear();
 	}
 

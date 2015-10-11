@@ -19,9 +19,21 @@ public class AnswerSubmitViewctrl {
 	@FXML private TextArea AnswerArea;
 	@FXML private Button Submitbtn;
 
+	private int LineCount;
+
 	@FXML
 	private void onSubmit(){
-		this.Submit(HostArea.getText(), AnswerArea.getText());
+		System.out.println(AnswerArea.getText());
+		this.Submit(HostArea.getText(), AnswerArea.getText(), LineCount, FieldEdit.Score);
+	}
+
+	@FXML
+	private void onAnswerRefresh(){
+		if(!FieldEdit.AnswerLine.isEmpty()){
+			AnswerArea.clear();
+			FieldEdit.AnswerLine.forEach(s -> AnswerArea.appendText(s));
+		}
+		LineCount++;
 	}
 
 	/**
@@ -30,19 +42,21 @@ public class AnswerSubmitViewctrl {
 	 * $ java SubmitClient host
 	 *
 	 * @author Mandai
+	 * @param lineCount 行数
+	 * @param score
 	 *
 	 */
-	private void Submit(String hostaddr,String answer) {
+	private void Submit(String hostaddr,String answer, int lineCount, int Score) {
 		Task<Void> t = new Task<Void>(){
 			@Override
 			protected Void call() throws Exception{
-				updateMessage("Connecting to " + hostaddr + "...\n");
+				System.out.println("Connecting to " + hostaddr + "...\n");
 				try (
 				// 標準入力を準備
 				Scanner stdIn = new Scanner(answer);
 						// リモートに接続
 						Socket sock = new Socket(hostaddr, 65432);) {
-					updateMessage("Connected.\n");
+					System.out.println("Connected.\n");
 
 					// リモートからの入力を準備
 					BufferedReader in = new BufferedReader(new InputStreamReader(
@@ -52,9 +66,9 @@ public class AnswerSubmitViewctrl {
 
 					// 標準入力から解答を読む
 					// <想定フォーマット> := <スコア> <石数> <解答の行数>
-					int score = stdIn.nextInt();
-					int num_stones = stdIn.nextInt();
-					int num_lines = stdIn.nextInt();
+					int score = Score;
+					int num_stones = LineCount;
+					int num_lines = LineCount;
 					// 改行を読み飛ばす
 					stdIn.nextLine();
 					// 解答を読み込む
@@ -69,17 +83,14 @@ public class AnswerSubmitViewctrl {
 
 					// リモートからの応答を受信
 					String result = in.readLine();
-					updateMessage("Reply from " + hostaddr + ": " + result + "\n");
+					System.out.println("Reply from " + hostaddr + ": " + result + "\n");
 
 				} catch (Exception e) {
-					updateMessage(e.getMessage());
+					System.out.println(e.getMessage());
 				}
 				return null;
 			}
 		};
 		new Thread(t).start();
-		while(t.isRunning()){
-			LogArea.setText(t.getMessage());
-		}
 	}
 }

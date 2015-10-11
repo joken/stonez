@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.net.url.RequestSubmit;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -38,7 +40,23 @@ public class FieldViewctrl {
 	}
 
 	public void setArgs(List<String> args){
-		args.forEach(s -> AnswerArea.appendText(s + "\n"));
+		for(int i = 1; i < args.size(); i++){
+			if (i % 4 == 0) {
+				AnswerArea.appendText(args.get(i -1) + "\n");
+			}else{
+				AnswerArea.appendText(args.get(i -1) + " ");
+			}
+		}
+	}
+
+	public void setArgs(String arg){
+		RequestSubmit r = new RequestSubmit();
+		r.download(arg);
+		questfield.setText(FieldView.field.setFile("quest"+FieldView.QUEST_NUM+".txt" ));
+		if(FieldView.field.getField()[0][0] != null){
+			this.FieldEditLauncher.setDisable(false);
+			this.AnswerTypeBtn.setDisable(false);
+		}
 	}
 
 	@FXML
