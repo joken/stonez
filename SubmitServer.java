@@ -33,14 +33,14 @@ public class SubmitServer {
 			// 提出先のURLを生成
 			URL url = new URL(spec);
 			// 提出器を作る
-			AnswerSubmitter submitter = new AnswerSubmitter(url);
+			AnswerSubmitter submitter = new AnswerSubmitter(url, token_str);
 			while (true) {
 				// 解答を受け付け
 				Answer answer = acceptAnswer();
 				// とりあえず表示
 				System.out.println(answer);
 				// 提出
-				answer.submit(submitter, token_str);
+				answer.submit(submitter);
 			}
 		} catch (MalformedURLException e) {
 			e.printStackTrace();

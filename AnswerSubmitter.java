@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -38,9 +40,27 @@ public class AnswerSubmitter {
 
 	// 提出先のURL
 	private URL url;
+	// トークン
+	private String token_str;
 
-	public AnswerSubmitter(URL url) {
+	// タイマ
+	private Timer timer = new Timer();
+
+	private TimerTask submit_task = new TimerTask() {
+
+		@Override
+		public void run() {
+			if (data_latest != null) {
+				submit(data_latest, token_str);
+			}
+		}
+
+	};
+
+	public AnswerSubmitter(URL url, String token_strs) {
 		this.url = url;
+		this.token_str = token_strs;
+		timer.schedule(submit_task, 1200);
 	}
 
 	/**
@@ -55,11 +75,10 @@ public class AnswerSubmitter {
 	 * @param token_str TODO
 	 * @return 結果の真偽
 	 */
-	public boolean submit(int score, int num_stones, String data, String token_str) {
+	public boolean submit(int score, int num_stones, String data) {
 		if (score < score_min && num_stones > num_stones_max) {
 			// 過去に提出された解答よりも良かった
 			// 提出
-			submit(data, token_str);
 			data_latest = data;
 			score_min = score;
 			num_stones_max = num_stones;

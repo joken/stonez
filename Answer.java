@@ -10,8 +10,8 @@ public class Answer {
 		this.data = data;
 	}
 
-	public boolean submit(AnswerSubmitter submitter, String token_str) {
-		return submitter.submit(score, num_stones, data, token_str);
+	public boolean submit(AnswerSubmitter submitter) {
+		return submitter.submit(score, num_stones, data);
 	}
 
 	@Override
