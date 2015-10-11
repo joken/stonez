@@ -20,10 +20,13 @@ public class SubmitServer {
 	public static void main(String[] args) {
 		// -p オプションで練習用URL文字列になる
 		String spec;
+		String token_str;
 		if (args.length >= 1 && args[0].equals("-p")) {
-			spec = args.length == 2 ? args[1] : "http://testform26.procon-online.net/answer?token=0123456789abcdef";
+			token_str = "0123456789abcdef";
+			spec = args.length == 2 ? args[1] : "http://testform26.procon-online.net/answer?token=" + token_str;
 		} else {
-			spec = "http://172.16.1.2/answer?token=fe2e7a2191c446a6";
+			token_str = "fe2e7a2191c446a6";
+			spec = "http://172.16.1.2/answer?token=" + token_str;
 		}
 		System.out.println("Server: " + spec);
 		try {
@@ -37,7 +40,7 @@ public class SubmitServer {
 				// とりあえず表示
 				System.out.println(answer);
 				// 提出
-				answer.submit(submitter);
+				answer.submit(submitter, token_str);
 			}
 		} catch (MalformedURLException e) {
 			e.printStackTrace();

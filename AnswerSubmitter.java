@@ -52,13 +52,14 @@ public class AnswerSubmitter {
 	 *            石数
 	 * @param data
 	 *            解答
+	 * @param token_str TODO
 	 * @return 結果の真偽
 	 */
-	public boolean submit(int score, int num_stones, String data) {
+	public boolean submit(int score, int num_stones, String data, String token_str) {
 		if (score < score_min && num_stones > num_stones_max) {
 			// 過去に提出された解答よりも良かった
 			// 提出
-			submit(data);
+			submit(data, token_str);
 			data_latest = data;
 			score_min = score;
 			num_stones_max = num_stones;
@@ -68,7 +69,7 @@ public class AnswerSubmitter {
 	}
 
 	// 提出
-	private void submit(String data) {
+	private void submit(String data, String token_str) {
 		// 改行文字の置換
 		String data_crlf = data.replaceAll("\r\n", "\n").replaceAll("\n", "\r\n");
 		// POSTのときにファイルで渡すための一時ファイル
@@ -93,7 +94,7 @@ public class AnswerSubmitter {
 			HttpPost httppost = new HttpPost(url.toURI());
 
 			FileBody answer = new FileBody(tmpFile);
-			StringBody token = new StringBody("0123456789abcdef",
+			StringBody token = new StringBody(token_str,
 					ContentType.MULTIPART_FORM_DATA);
 			HttpEntity reqEntity = MultipartEntityBuilder.create()
 					.addPart("answer", answer).addPart("token", token).build();
