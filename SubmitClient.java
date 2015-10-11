@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -48,7 +49,7 @@ public class SubmitClient {
 			// 解答を読み込む
 			String data = "";
 			for (int i = 0; i < num_lines; i++) {
-				data += stdIn.nextLine() + "\n";
+				data += stdIn.nextLine() + "\r\n";
 			}
 
 			// リモートに送信
