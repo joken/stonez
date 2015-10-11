@@ -14,9 +14,9 @@ public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		// 自力で解く
-		main_solve(begin);
+		main_solve();
 		// ビームサーチ
-//		main_solve_beam(begin);
+//		main_solve_beam();
 		// 読む
 //		mail_lp_read();
 		// ソルバに任せる
@@ -48,7 +48,7 @@ public class Main {
 		System.out.println("TIME : " + (t1 - t0));
 	}
 
-	private static void main_solve(int begin) throws FileNotFoundException {
+	private static void main_solve() throws FileNotFoundException {
 
 		long t0 = System.currentTimeMillis();
 		// --------------

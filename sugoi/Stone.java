@@ -10,6 +10,7 @@ class Stone {
 	private int value;
 	private int[] lines;
 	private StatusCandidate.Status status;
+	private int effect = Integer.MAX_VALUE;
 
 	public Stone(int i_stone, int op, int i_field, int value, int[][][] lines_stone) {
 		this.i_stone = i_stone;
@@ -64,6 +65,14 @@ class Stone {
 	public boolean isReady() {
 		checkStatusObject();
 		return status.is(State.READY);
+	}
+
+	public void updateEffect(int effect) {
+		this.effect = Math.min(this.effect, effect);
+	}
+
+	public int getEffect() {
+		return effect;
 	}
 
 	public void place(StoneBucket[] candidates_by_i, StoneBucket[][] candidates_by_position, Neighbors neighbors) {
