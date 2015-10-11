@@ -36,7 +36,7 @@ public class AnswerSubmitter {
 	// 一番良かった解答の石数
 	private int num_stones_max = 0;
 	// 一番良かった解答(toString 用)
-	private String data_latest = "";
+	private String data_latest;
 
 	// 提出先のURL
 	private URL url;
@@ -46,13 +46,15 @@ public class AnswerSubmitter {
 	// タイマ
 	private Timer timer = new Timer();
 
-	private TimerTask submit_task = new TimerTask() {
+	private class SubmitTask extends TimerTask {
 
 		@Override
 		public void run() {
 			if (data_latest != null) {
+				System.err.println(data_latest);
 				submit(data_latest, token_str);
 			}
+			timer.schedule(new SubmitTask(), 1200);
 		}
 
 	};
@@ -60,7 +62,7 @@ public class AnswerSubmitter {
 	public AnswerSubmitter(URL url, String token_strs) {
 		this.url = url;
 		this.token_str = token_strs;
-		timer.schedule(submit_task, 1200);
+		timer.schedule(new SubmitTask(), 1200);
 	}
 
 	/**

@@ -18,7 +18,7 @@ public class Answer {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("Header: %d %d %d\n", score, num_stones, data.split("\n").length - 1));
-		sb.append(String.format("Data: %s\n", data));
+//		sb.append(String.format("Data: %s\n", data));
 		return sb.toString();
 	}
 }
