@@ -7,23 +7,27 @@ import java.util.Scanner;
 
 public class Main {
 
+	// SubmitServer のアドレス
+	static  String addr_submit = "192.168.2.4";
+	// 開始石
+	static int begin = 0;
+
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		// 自力で解く
-//		main_solve();
+		main_solve(begin);
 		// ビームサーチ
-//		main_solve_beam();
+//		main_solve_beam(begin);
 		// 読む
 //		mail_lp_read();
 		// ソルバに任せる
-		main_lp();
+//		main_lp();
 	}
 
-	private static File file = new File("C:/users/joken/downloads/quest18.txt");
+	private static File file = new File("C:/users/joken/downloads/quest91.txt");
 
 	private static void mail_lp_read() throws FileNotFoundException {
-
 		File file_result = new File("C:/users/joken/desktop/procon.sol");
-		Solver1 solver = new Solver1(new Scanner(file));
+		Solver1 solver = new Solver1(new Scanner(file), addr_submit);
 		solver.importLP(new Scanner(file_result));
 	}
 
@@ -33,7 +37,7 @@ public class Main {
 		long t0 = System.currentTimeMillis();
 		// --------------
 
-		Solver1 solver = new Solver1(new Scanner(file));
+		Solver1 solver = new Solver1(new Scanner(file), addr_submit);
 		try (FileWriter out = new FileWriter(file_out)) {
 			solver.exportLP(out);
 		}
@@ -44,13 +48,13 @@ public class Main {
 		System.out.println("TIME : " + (t1 - t0));
 	}
 
-	private static void main_solve() throws FileNotFoundException {
+	private static void main_solve(int begin) throws FileNotFoundException {
 
 		long t0 = System.currentTimeMillis();
 		// --------------
 
-		Solver1 solver = new Solver1(new Scanner(file));
-		solver.solve();
+		Solver1 solver = new Solver1(new Scanner(file), addr_submit);
+		solver.solve(begin);
 
 		// --------------
 		long t1 = System.currentTimeMillis();
@@ -73,8 +77,8 @@ public class Main {
 		long t0 = System.currentTimeMillis();
 		// --------------
 
-		Solver1 solver = new Solver1(new Scanner(file));
-		solver.solveBeam();
+		Solver1 solver = new Solver1(new Scanner(file), addr_submit);
+		solver.solveBeam(begin);
 
 		// --------------
 		long t1 = System.currentTimeMillis();

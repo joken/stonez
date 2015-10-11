@@ -31,7 +31,7 @@ class Neighbors {
 			stones_neighbor = findNeighbors(stone_placed);
 			neighbors.put(stone_placed, new StoneBucket(stones_neighbor));
 		} else {
-			System.out.println(" HIT");
+//			System.out.println(" HIT");
 			stones_neighbor = neighbors.get(stone_placed).getStones();
 		}
 		return stones_neighbor;
@@ -101,7 +101,7 @@ class Neighbors {
 				stones_neighbor = getNeighborsFollowing(stone_me, false);
 				neighbors.put(stone_me, new StoneBucket(stones_neighbor));
 			} else {
-				System.out.println("HIT");
+//				System.out.println("HIT");
 				stones_neighbor = neighbors.get(stone_me).getStones();
 			}
 			return stones_neighbor;
